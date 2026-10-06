@@ -1,0 +1,1595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Clockmaker's Last Hour</title>
+<meta name="description" content="A 45-minute murder mystery escape room your group plays together from their own phones or computers.">
+<meta name="theme-color" content="#13100c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23c49a45'/%3E%3Ccircle cx='32' cy='32' r='24' fill='%23efe6cf'/%3E%3Cpath d='M32 32 L32 14 M32 32 L44 38' stroke='%231d1610' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Courier+Prime:wght@400;700&family=Caveat:wght@500;600&display=swap">
+<style>
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+
+/* Layout: one-screen night-time workshop. Sticky timer bar, an illustrated wall with tappable objects, and a detective's notebook column beside it on wide screens (below it on phones). Deliberately single-theme: a dark room lit by one lamp. */
+:root{
+  color-scheme: dark;
+  --night:#13100c;
+  --panel:#1d1915;
+  --panel-2:#28221b;
+  --line:#3b342b;
+  --fg:#efe6d3;
+  --muted:#a89d89;
+  --brass:#cfa650;
+  --brass-dk:#8e6e2e;
+  --paper:#ece3cd;
+  --paper-2:#d9cdb0;
+  --ink:#2a2219;
+  --ink-soft:#5f5242;
+  --oxblood:#6e2c22;
+  --seal:#c0473a;
+  --ok:#9dbd86;
+  --pencil:#3a4a6a;
+  --f-display:"IM Fell English SC","IM Fell English",Georgia,serif;
+  --f-serif:"IM Fell English",Georgia,serif;
+  --f-body:"Alegreya Sans","Gill Sans","Trebuchet MS",system-ui,sans-serif;
+  --f-type:"Courier Prime","Courier New",ui-monospace,monospace;
+  --f-hand:"Caveat","Segoe Print","Bradley Hand",cursive;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--night);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body.noscroll{overflow:hidden}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.app{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:0 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (min-width:1060px){
+  .app.has-notes{grid-template-columns:minmax(0,1fr) 370px}
+  .app.has-notes .hud{grid-column:1/-1}
+  .notes{position:sticky;top:calc(env(safe-area-inset-top,0px) + 74px);max-height:calc(100vh - 90px);overflow:auto}
+  .notes-btn{display:none}
+}
+
+/* HUD */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;padding-block:10px 12px;background:var(--night);border-bottom:1px solid var(--line)}
+.hud .t{display:flex;flex-direction:column;line-height:1.05}
+.tl{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.timer{font-family:var(--f-type);font-weight:700;font-size:1.85rem;font-variant-numeric:tabular-nums;color:var(--brass)}
+.timer.low{color:var(--seal);animation:pulse 1s ease-in-out infinite}
+.timer.paused{color:var(--muted)}
+.gclock{font-family:var(--f-type);font-size:1rem;font-variant-numeric:tabular-nums;padding-top:6px}
+.acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.chip-btn{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 14px;font-size:.92rem;cursor:pointer}
+.chip-btn:hover{border-color:var(--brass-dk)}
+@media (max-width:440px){.chip-btn{padding:6px 11px;font-size:.86rem}.timer{font-size:1.6rem}}
+@keyframes pulse{50%{opacity:.55}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:500;line-height:1.2}
+.btn:hover{border-color:var(--brass-dk)}
+.btn.primary{background:var(--brass);color:#1b140a;border-color:var(--brass);font-weight:700}
+.btn.primary:hover{background:#dcb764}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--f-type);letter-spacing:.14em;text-transform:uppercase;font-size:.74rem;color:var(--brass);margin:0}
+
+/* Stage */
+.stage{min-width:0;padding-top:4px}
+.wallbar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.wallbar h2{font-family:var(--f-display);font-weight:400;font-size:1.65rem;margin:0;line-height:1}
+.wallbar .pos{font-family:var(--f-type);color:var(--muted);font-size:.74rem;letter-spacing:.08em}
+.navbtn{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;display:grid;place-items:center;padding:0}
+.navbtn svg{width:18px;height:18px}
+.navbtn:hover{border-color:var(--brass-dk)}
+.wall-tabs{margin-left:auto;display:flex;gap:4px}
+.wall-tabs button{border:1px solid transparent;background:none;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.9rem}
+.wall-tabs button[aria-current="true"]{color:var(--fg);border-color:var(--line);background:var(--panel)}
+@media (max-width:720px){.wall-tabs{display:none}}
+.scene{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#1d2a25;box-shadow:0 24px 50px -24px rgba(0,0,0,.9)}
+.scene svg{display:block;width:100%;height:auto}
+.hot{cursor:pointer;transition:filter .15s}
+.hot:hover,.hot:focus-visible{filter:drop-shadow(0 0 6px rgba(240,200,110,.9)) brightness(1.15);outline:none}
+.objs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.obj{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:.95rem}
+.obj:hover{border-color:var(--brass-dk)}
+.obj .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);flex:none}
+.obj.seen .dot{background:transparent;border:1px solid var(--muted)}
+.obj .st{font-family:var(--f-type);font-size:.72rem;color:var(--ok);letter-spacing:.06em;text-transform:uppercase}
+.tip{color:var(--muted);font-size:.88rem;margin:10px 0 0}
+.swing{animation:swing 1.6s ease-in-out infinite alternate}
+@keyframes swing{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.snow{animation:snow 7s linear infinite}
+@keyframes snow{from{transform:translateY(0)}to{transform:translateY(60px)}}
+.sechand{transform-origin:150px 150px;animation:sec 60s steps(60) infinite}
+@keyframes sec{to{transform:rotate(360deg)}}
+
+/* Notebook */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px 18px;min-width:0}
+.notes h3{font-family:var(--f-display);font-weight:400;font-size:1.45rem;margin:0 0 6px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto}
+.tabs button{background:none;border:0;padding:8px 7px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-size:.88rem}
+.tabs button[aria-selected="true"]{color:var(--fg);border-color:var(--brass)}
+.case{font-size:.92rem;color:var(--muted);margin:0 0 6px}
+.suspect{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;padding-block:12px;border-top:1px dashed var(--line)}
+.mono{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);background:var(--panel-2);border:1px solid var(--brass-dk);color:var(--brass);font-size:.95rem}
+.suspect h4{margin:0;font-size:1rem;font-weight:700;line-height:1.2}
+.suspect .role{font-size:.82rem;color:var(--muted)}
+.quote{font-family:var(--f-serif);font-style:italic;font-size:.98rem;margin:6px 0 0;line-height:1.4}
+.snotes{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:5px}
+.snotes li{font-size:.86rem;padding-left:12px;border-left:2px solid var(--brass-dk);line-height:1.35}
+.evlist{display:grid;gap:10px}
+.evcard{background:var(--paper);color:var(--ink);border-radius:3px;padding:10px 12px 11px;box-shadow:0 6px 14px -8px #000}
+.evcard .tag{font-family:var(--f-type);font-size:.7rem;letter-spacing:.12em;color:#9c3a2e;text-transform:uppercase}
+.evcard h4{margin:2px 0 3px;font-family:var(--f-serif);font-weight:400;font-size:1.08rem}
+.evcard p{margin:0;font-size:.88rem;line-height:1.4;color:var(--ink-soft)}
+.tline{list-style:none;padding:0;margin:0}
+.tline li{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;padding-block:7px;border-bottom:1px solid var(--line);font-size:.9rem;line-height:1.35}
+.tline time{font-family:var(--f-type);color:var(--brass);font-variant-numeric:tabular-nums;font-size:.86rem}
+.tline .by{display:block;font-size:.72rem;color:var(--muted);font-family:var(--f-type);letter-spacing:.06em;text-transform:uppercase}
+.tline li.door time{color:var(--fg)}
+.empty{color:var(--muted);font-size:.92rem}
+.items{display:grid;gap:8px}
+.item{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.item b{display:block}
+.item span{font-size:.88rem;color:var(--muted)}
+
+/* Sheet */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(6,5,3,.76);display:flex;align-items:flex-end;justify-content:center;padding-top:calc(env(safe-area-inset-top,0px) + 12px)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-bottom:0;width:100%;max-width:680px;max-height:100%;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(26px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
+.sheet:focus{outline:none}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+@media (min-width:720px){.ov{align-items:center;padding:24px}.sheet{border-radius:14px;border-bottom:1px solid var(--line);padding:22px 26px 28px}}
+.sheet-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.sheet-head h2{font-family:var(--f-display);font-weight:400;font-size:1.75rem;margin:2px 0 0;line-height:1.05}
+.x{margin-left:auto;flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);cursor:pointer;font-size:1.3rem;line-height:1}
+.sheet-body > p{margin:0 0 12px;max-width:62ch}
+.sheet-body .art{display:block;margin:6px auto 14px;max-width:100%}
+.msg{min-height:1.5em;margin:10px 0 0;text-align:center;font-weight:500}
+.msg.bad{color:var(--seal)}
+.msg.good{color:var(--ok)}
+
+/* Paper & documents */
+.paper{background:var(--paper);color:var(--ink);padding:18px 20px;border-radius:2px;box-shadow:0 2px 0 var(--paper-2),0 14px 26px -12px rgba(0,0,0,.8);margin:4px 0 14px}
+.hand{font-family:var(--f-hand);font-size:1.38rem;line-height:1.32}
+.typed{font-family:var(--f-type);font-size:.95rem;line-height:1.5}
+.lined{background-image:repeating-linear-gradient(transparent 0 33px,rgba(58,74,106,.2) 33px 34px);background-color:var(--paper)}
+.journal p{margin:0 0 .8em}
+.journal .date{display:block;font-weight:600;color:var(--oxblood);font-size:1.12rem}
+.cipher{font-family:var(--f-hand);font-size:2.2rem;letter-spacing:.04em;text-align:center;margin:.2em 0;color:var(--pencil)}
+.page-label{font-family:var(--f-type);font-size:.72rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:16px 0 4px}
+.tape{font-family:var(--f-type);background:var(--paper);color:var(--ink);max-width:340px;margin:6px auto 14px;padding:14px 18px;font-size:.95rem;line-height:1.75;white-space:pre;overflow-x:auto;box-shadow:0 14px 26px -12px #000;border-left:6px dotted var(--paper-2);border-right:6px dotted var(--paper-2)}
+.transcript{border-left:3px solid var(--brass-dk);padding:4px 0 4px 14px;margin:12px 0}
+.transcript p{margin:0 0 .7em;font-family:var(--f-serif);font-size:1.06rem;line-height:1.5}
+.transcript .who{font-family:var(--f-type);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);margin-bottom:6px}
+
+/* Locks */
+.lock{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 6px}
+.wheel{appearance:none;-webkit-appearance:none;width:52px;height:68px;border-radius:8px;border:2px solid var(--brass-dk);background:linear-gradient(180deg,#8a6a2a,#e8c87a 42%,#f0d48e 50%,#e8c87a 58%,#8a6a2a);color:#1d150a;font:700 30px/1 var(--f-type);text-align:center;text-align-last:center;cursor:pointer;padding:0}
+.wheel option{background:var(--paper);color:var(--ink);font-size:18px}
+@media (max-width:420px){.wheel{width:44px;height:60px;font-size:26px}}
+.center{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.setrow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:6px 0 12px}
+.setrow label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-items:center}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+
+/* Phone dial */
+.dial{position:relative;width:min(300px,80vw);aspect-ratio:1;margin:14px auto 8px;border-radius:50%;background:radial-gradient(circle,#2b2825 0 62%,#171513 63% 100%);box-shadow:inset 0 0 0 6px #0c0b0a,0 14px 30px -12px #000}
+.dial .h{position:absolute;width:17.5%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:#e8e0cf;color:#1a1612;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;line-height:1;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);padding:0}
+.dial .h b{font:700 1.2rem var(--f-type)}
+.dial .h small{font:700 .54rem var(--f-body);letter-spacing:.06em;margin-top:2px}
+.dial .h:active{transform:translate(-50%,-50%) scale(.9)}
+.dial-center{position:absolute;inset:33%;border-radius:50%;background:var(--paper);color:var(--ink);display:grid;place-items:center;text-align:center;font:700 .62rem/1.3 var(--f-type);letter-spacing:.12em}
+.fstop{position:absolute;width:6%;height:16%;background:linear-gradient(90deg,#9c7832,#e6c578);border-radius:3px;left:84%;top:66%;transform:rotate(-30deg)}
+.dialled{font-family:var(--f-type);font-size:1.5rem;letter-spacing:.3em;text-align:center;min-height:1.6em;color:var(--brass)}
+.card{background:var(--paper);color:var(--ink);font-family:var(--f-type);font-size:.88rem;padding:10px 14px;border-radius:2px;max-width:420px;margin:0 auto 6px;text-align:center;line-height:1.5}
+
+/* Cuckoo */
+.figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
+.fig{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border:1px solid var(--line);background:var(--panel-2);border-radius:10px;cursor:pointer}
+.fig:hover{border-color:var(--brass-dk)}
+.fig svg{width:46px;height:62px}
+.seq{text-align:center;font-family:var(--f-type);color:var(--muted);margin:12px 0 0;min-height:1.5em}
+
+/* Photo */
+.photo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:6px 0 10px}
+.photo svg{width:100%;height:auto;display:block;box-shadow:0 14px 26px -12px #000}
+
+/* Parlour */
+.parlour{max-width:820px;padding-top:8px}
+.parlour h2{font-family:var(--f-display);font-weight:400;font-size:clamp(2rem,5vw,2.8rem);margin:.1em 0 .2em;line-height:1}
+.parlour .lede-s{font-family:var(--f-serif);font-size:1.12rem;max-width:62ch;margin:0 0 22px}
+fieldset{border:0;padding:0;margin:0 0 20px;min-width:0}
+legend{font-family:var(--f-serif);font-size:1.3rem;margin-bottom:8px;padding:0}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.opt{position:relative;display:block;cursor:pointer}
+.opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opt span{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);height:100%}
+.opt input:checked + span{border-color:var(--brass);background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--brass)}
+.opt input:focus-visible + span{outline:2px solid var(--brass);outline-offset:2px}
+
+/* Intro & ending */
+.screen{grid-column:1/-1;max-width:900px;margin:0 auto;padding-block:36px 40px;width:100%}
+.intro-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:center}
+@media (min-width:780px){.intro-grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.screen h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.6rem,7.5vw,4.6rem);line-height:.95;margin:.25em 0 .35em;text-wrap:balance}
+.lede p{font-family:var(--f-serif);font-size:1.18rem;line-height:1.55;margin:0 0 .8em;max-width:60ch}
+.iclock{width:100%;max-width:280px;margin:0 auto;display:block}
+.goal{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:14px;margin:20px 0;font-size:1.08rem}
+.goal b{color:var(--brass);font-weight:700}
+.cast{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0 22px}
+.cast div{display:flex;gap:10px;align-items:center}
+.cast b{display:block;font-size:.98rem;line-height:1.2}
+.cast span{font-size:.84rem;color:var(--muted)}
+.howto{margin:0 0 24px;padding-left:1.2em;display:grid;gap:6px;max-width:64ch}
+h3.sub{font-family:var(--f-display);font-weight:400;font-size:1.3rem;margin:22px 0 8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0 22px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.stat span{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat b{display:block;font-family:var(--f-type);font-size:1.45rem;color:var(--brass);font-variant-numeric:tabular-nums}
+.solution{display:grid;gap:8px;padding-left:1.2em;margin:0 0 24px;max-width:66ch}
+.confession{font-family:var(--f-serif);font-size:1.18rem;line-height:1.55;max-width:62ch}
+
+/* Hints & menu */
+.goalcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--panel-2)}
+.goalcard h4{margin:0 0 6px;font-size:1rem}
+.goalcard ol{margin:0 0 8px;padding-left:1.2em;display:grid;gap:4px}
+.menu-list{display:grid;gap:8px}
+.menu-list .btn{justify-content:flex-start}
+
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--paper);color:var(--ink);padding:10px 16px;border-radius:8px;font-weight:500;box-shadow:0 12px 28px -10px #000;opacity:0;pointer-events:none;transition:.25s;z-index:80;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+.team{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px 4px 6px;cursor:pointer;text-align:left;line-height:1.15;min-width:0}
+.team:hover{border-color:var(--brass-dk)}
+.avs{display:inline-flex;flex:none}
+.av{width:26px;height:26px;border-radius:50%;border:2px solid var(--panel);object-fit:cover;background:var(--panel-2);display:inline-grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--brass);flex:none}
+.avs .av + .av{margin-left:-8px}
+.tm b{display:block;font-family:var(--f-type);font-size:.76rem;letter-spacing:.1em;color:var(--brass);font-weight:700}
+.tm small{display:block;font-size:.76rem;color:var(--muted)}
+.here{color:var(--brass);font-size:.9rem;margin:10px 0 0}
+.here:empty{display:none}
+.wb{display:inline-block;min-width:16px;height:16px;border-radius:8px;background:var(--brass);color:#1b140a;font-size:.68rem;font-weight:700;line-height:16px;text-align:center;margin-left:6px;padding:0 4px;vertical-align:1px}
+.wb:empty{display:none}
+.games{display:grid;gap:10px;margin:8px 0 16px}
+.game{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel);flex-wrap:wrap}
+.game .gi{flex:1;min-width:0}
+.game .gi b{font-family:var(--f-type);letter-spacing:.1em;color:var(--brass)}
+.game .gi span{display:block;font-size:.9rem;color:var(--muted)}
+.game .av{width:32px;height:32px}
+.lobby-h{font-family:var(--f-type);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+#lobby{display:grid;gap:12px;margin-bottom:6px}
+#lobby p{margin:0}
+.roster{display:grid;gap:10px;margin:6px 0 16px}
+.roster > div{display:flex;align-items:center;gap:12px}
+.roster .av{width:36px;height:36px;font-size:.9rem}
+.roster b{display:block}
+.roster span{font-size:.88rem;color:var(--muted)}
+.btn.big{font-size:1.08rem;padding:13px 22px}
+
+
+.lobby{display:grid;gap:12px;margin-bottom:8px}
+.lobby p{margin:0}
+.invite{background:var(--panel-2);border:1px solid var(--brass-dk);border-radius:10px;padding:12px 14px}
+.invite b{font-family:var(--f-type);letter-spacing:.12em;color:var(--brass)}
+.fl{font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:-6px}
+.tin{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:1rem;color:var(--fg)}
+.tin:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass-dk)}
+.code-in{width:7.5em;font-family:var(--f-type);font-weight:700;font-size:1.3rem;letter-spacing:.3em;text-transform:uppercase;text-align:center;padding:9px 8px}
+.lobby-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.lcard{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--panel);display:grid;gap:10px;align-content:start}
+.lcard h4{margin:0;font-family:var(--f-serif);font-weight:400;font-size:1.3rem}
+.lcard p{color:var(--muted);font-size:.95rem}
+.netline{font-size:.9rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.sdot.ok{background:var(--ok)}
+.sdot.bad{background:var(--seal)}
+.invitebox{display:grid;gap:10px;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel-2);margin-bottom:14px}
+.invitebox p{margin:0}
+.bigcode{font-family:var(--f-type);font-weight:700;font-size:2.6rem;letter-spacing:.3em;color:var(--brass);line-height:1}
+.linkbox{max-width:100%;font-family:var(--f-type);font-size:.85rem}
+.roster .off{opacity:.55}
+.invited-first{margin:4px 0 26px}
+@media (max-width:779px){.iclock-wrap{display:none}}
+
+@media (prefers-reduced-motion:reduce){
+  .swing,.snow,.sechand,.timer.low,.sheet{animation:none}
+  .toast{transition:none}
+}
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="brassg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecc979"/><stop offset=".5" stop-color="#c49a45"/><stop offset="1" stop-color="#8a6a2a"/></linearGradient>
+    <linearGradient id="woodg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b5333"/><stop offset="1" stop-color="#57381f"/></linearGradient>
+    <pattern id="wp" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="#1d2a25"/><rect width="2" height="44" fill="#22322c"/><path d="M22 10 l5 7 -5 7 -5 -7z" fill="#24352f"/><circle cx="22" cy="36" r="1.5" fill="#27382f"/></pattern>
+    <pattern id="floor" width="160" height="26" patternUnits="userSpaceOnUse"><rect width="160" height="26" fill="#3b2617"/><rect y="24" width="160" height="2" fill="#24170c"/><rect x="96" width="2" height="24" fill="#2a1b0f"/><path d="M10 9 q30 -3 60 0 M110 15 q20 -2 40 0" stroke="#45311f" stroke-width="1" fill="none"/></pattern>
+    <radialGradient id="vig" cx=".5" cy=".45" r=".78"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+    <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5d78f" stop-opacity=".3"/><stop offset="1" stop-color="#f5d78f" stop-opacity=".04"/></linearGradient>
+    <radialGradient id="hallglow" cx=".5" cy=".3" r=".85"><stop offset="0" stop-color="#ffe2a8"/><stop offset="1" stop-color="#a8722c"/></radialGradient>
+    <pattern id="snowpat" width="60" height="60" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1.4" fill="#e6ebf0"/><circle cx="30" cy="4" r="1" fill="#e6ebf0"/><circle cx="48" cy="22" r="1.6" fill="#e6ebf0"/><circle cx="18" cy="38" r="1.1" fill="#e6ebf0"/><circle cx="40" cy="50" r="1.3" fill="#e6ebf0"/><circle cx="56" cy="44" r=".9" fill="#e6ebf0"/></pattern>
+    <clipPath id="winclip"><rect x="58" y="68" width="154" height="194"/></clipPath>
+    <linearGradient id="sepia" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9ad80"/><stop offset="1" stop-color="#9c8058"/></linearGradient>
+  </defs>
+</svg>
+
+<div id="app" class="app"></div>
+<div id="ov" class="ov" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+
+(function(){
+"use strict";
+const TOTAL = 45*60*1000;
+const KEY = "clockmakers-last-hour-gh1";
+const $ = (s, r=document) => r.querySelector(s);
+
+/* ---------------- Story data ---------------- */
+const WALLS = [
+  {id:"bench", name:"Workbench", objs:["journal","note","teacup","cigar","mallet","watch"]},
+  {id:"clocks", name:"Clock wall", objs:["grandfather","cuckoo","letterclock","repairs"]},
+  {id:"cabinets", name:"Cabinets", objs:["window","book","cabinet","notebook"]},
+  {id:"door", name:"Door", objs:["sign","door","register","phone","coat"]},
+];
+const OBJ = {
+  journal:"Edmund's journal", note:"Note on the bench", teacup:"Teacup & kettle", cigar:"Ashtray", mallet:"Brass mallet", watch:"Pocket watch",
+  grandfather:"Long-case clock", cuckoo:"Cuckoo clock", letterclock:"Letter clock", repairs:"Repair shelf",
+  window:"Barred window", book:"Bookshelf", cabinet:"Gilding cabinet", notebook:"Apprentice's bench",
+  sign:"Shop sign", door:"Workshop door", register:"Door register", phone:"Telephone", coat:"Edmund's coat"
+};
+const SUSPECTS = [
+  {id:"margaret", name:"Margaret Harrow", role:"Edmund's sister", ini:"MH", said:"I was at the piano in the parlour from ten o'clock until I went to fetch Edmund at five to eleven. I never stopped playing. Ask anyone."},
+  {id:"felix", name:"Dr. Felix Amesbury", role:"Family physician", ini:"FA", said:"I was on the hall telephone to St. Luke's about a patient, from half past ten until nearly eleven. Miss Harrow's piano was going the whole time. I could barely hear."},
+  {id:"victor", name:"Victor Lang", role:"Rival watch manufacturer", ini:"VL", said:"I went out by the terrace door for a cigar at about half past ten and came back in at a quarter to eleven. I could hear the piano from the garden."},
+  {id:"clara", name:"Clara Doyle", role:"Edmund's apprentice", ini:"CD", said:"I was alone in the library, reading, from ten until I heard Miss Harrow scream. I haven't set foot in the workshop since supper."},
+];
+const EV = {
+  watch:{title:"Stopped watch", text:"Edmund's pocket watch hit the floor and stopped at 10:42."},
+  teacup:{title:"Bitter almonds", text:"Edmund's tea smells faintly of bitter almonds. He brewed it himself on his bench kettle."},
+  cigar:{title:"Cigar stub", text:"A cold Havana stub in the ashtray. Victor Lang smokes this brand."},
+  mallet:{title:"Clean mallet", text:"The brass mallet is spotless, and there isn't a mark on Edmund."},
+  journal:{title:"Edmund's journal", text:"Every suspect quarrelled with Edmund this week. Lang visited the workshop at seven. Only Clara and Edmund knew the gilding-cabinet word."},
+  notebook:{title:"Clara's notebook", text:"Her escapement sketch, signed and dated 12 May. The cabinet word in clock cipher: 12:10 · 6:30 · 4:40."},
+  book:{title:"Gilding salts", text:"Potassium cyanide, used for gilding, kills within minutes in a drink. It smells faintly of bitter almonds."},
+  cabinet:{title:"Cyanide taken tonight", text:"The cyanide jar's seal is broken and fresh powder is spilled. Whoever took it locked the cabinet again afterwards."},
+  tape:{title:"Door register tape", text:"The workshop door opened at 7:02, 7:19, 7:30, 9:58, 10:38, 10:44, 10:55 and 11:14 PM. No other times."},
+  moss:{title:"Note from Mrs. Moss", text:"Mrs. Edith Moss, night supervisor at the Ashby Exchange, thanked Edmund for mending her mother's clock."},
+  call:{title:"The night supervisor", text:"Hall telephone to St. Luke's, 10:31 to 10:52. Dr. Amesbury was talking whenever she listened, and the piano never stopped. Around 10:40 he shouted at Lang, who laughed from outside the terrace door."},
+  photo:{title:"Photograph", text:"“Me and the old lady, the day I finished her. 1901. She opens her case only when her hands show her own number.”"},
+  repairs:{title:"Repair tickets", text:"One ticket reads: “Dr. Amesbury, gold half-hunter. On account. UNPAID.”"},
+};
+const ITEMS = {
+  registerKey:{title:"Register key", text:"A small brass key tagged “Door register”."},
+  photo:{title:"Photograph", text:"From inside the cuckoo clock. Something is written on the back."},
+  doorKey:{title:"Iron door key", text:"Heavy and cold. It came from inside the long-case clock."},
+};
+const EXAMINE_EV = {watch:"watch", teacup:"teacup", cigar:"cigar", mallet:"mallet", notebook:"notebook", book:"book", repairs:"repairs", coat:"moss"};
+const SUSPECT_NOTES = {
+  margaret:[["journal","Journal, 3 Oct: Edmund was leaving the house to the Horological Society, not to her."],["call","Mrs. Moss: the piano never stopped during the call, 10:31 to 10:52."]],
+  felix:[["journal","Journal, 1 Oct: owes Edmund £400. Edmund refused him more time."],["repairs","Repair ticket: his watch repair is on account, unpaid."],["call","Mrs. Moss: on the hall telephone 10:31 to 10:52, talking every time she listened. Shouted at Lang at about 10:40."]],
+  victor:[["cigar","His brand of cigar is in the ashtray."],["journal","Journal, 6 Oct: came to the workshop at seven to make an offer. Said Edmund would “live to regret” refusing."],["call","Mrs. Moss: heard him laugh outside the terrace door at about 10:40."]],
+  clara:[["notebook","Her notebook: the escapement sketch is hers, dated 12 May. She wrote the cabinet word in cipher."],["journal","Journal, 2 Oct: Edmund patented her escapement under his own name and hid the papers."],["journal","Journal, 5 Oct: only Clara and Edmund know the gilding-cabinet word."]],
+};
+const TL = [
+  [1140,"7:00 PM","journal","Lang visits the workshop to make his offer.","Journal"],
+  [1142,"7:02 PM","tape","Door opens.","Register"],
+  [1159,"7:19 PM","tape","Door opens.","Register"],
+  [1170,"7:30 PM","tape","Door opens.","Register"],
+  [1318,"9:58 PM","tape","Door opens.","Register"],
+  [1320,"10:00 PM",null,"Margaret starts playing the piano. Clara says she went to the library.","Statements"],
+  [1350,"10:30 PM",null,"Lang goes out for a cigar. Dr. Amesbury goes to the telephone.","Statements"],
+  [1351,"10:31 PM","call","The hall telephone is connected to St. Luke's.","Mrs. Moss"],
+  [1358,"10:38 PM","tape","Door opens.","Register"],
+  [1360,"~10:40 PM","call","Dr. Amesbury shouts at Lang to shut the terrace door. Lang laughs outside.","Mrs. Moss"],
+  [1362,"10:42 PM","watch","Edmund's pocket watch stops.","Watch"],
+  [1364,"10:44 PM","tape","Door opens.","Register"],
+  [1365,"10:45 PM",null,"Lang says he came back inside.","Statement"],
+  [1372,"10:52 PM","call","The call ends.","Mrs. Moss"],
+  [1375,"10:55 PM",null,"Margaret finds Edmund dead.","Statement"],
+  [1375.5,"10:55 PM","tape","Door opens.","Register"],
+  [1394,"11:14 PM",null,"You enter the workshop. The door locks behind you.","You"],
+  [1394.5,"11:14 PM","tape","Door opens.","Register"],
+  [1440,"12:00 AM",null,"The last train leaves Ashby.","Timetable"],
+];
+const JOURNAL = [
+  ["Thursday 1 October","Felix came again begging more time on the £400 he owes me. I said no. A doctor ought to manage his money better than he manages his temper."],
+  ["Friday 2 October","Patent No. 412,906 came through today: the double-pallet escapement, in my name. Clara drew the first sketches, I grant her that, but it was my workshop and my brass. She is not to see the papers. I've told her they're still with the solicitors."],
+  ["Saturday 3 October","Told Margaret the house goes to the Horological Society when I'm gone, not to her. She didn't say a word all through supper."],
+  ["Monday 5 October","Clara has changed the gilding-cabinet word again. Only she and I know it. She keeps it in her notebook in our clock cipher, as if no one else in this house could read a clock."],
+  ["Tuesday 6 October","Sixty today. Lang came to the workshop at seven, before dinner, to make his third offer for the shop. Smoked his foul cigar all over my bench. When I refused, he said I'd “live to regret it.” The man reads too many thrillers."],
+  ["Later","Margaret asked again how to wake the old cuckoo. As I've told her a hundred times: the way the village wakes. Whoever rises first, then whoever works all day, then whoever comes out at dusk."],
+  ["P.S.","Spare door key is in the old lady, as always."],
+];
+const HOW = [["mallet","Struck with the brass mallet"],["cyanide","Cyanide in his tea"],["draught","An overdose of sleeping draught"],["chain","Strangled with a watch chain"]];
+const WHY = [["house","To inherit the house"],["debt","To escape a £400 debt"],["shop","To get hold of the shop"],["patent","Revenge for the stolen patent"]];
+const SOLUTION = [
+  "The door register shows someone in the workshop from 10:38 to 10:44, with no other comings or goings. Edmund's watch stopped at 10:42.",
+  "Margaret was at the piano the whole time. Everyone heard it, including Mrs. Moss on the telephone line.",
+  "Dr. Amesbury was on the hall telephone from 10:31 to 10:52, and at about 10:40 he shouted at Victor Lang, who was outside the terrace door.",
+  "Lang's cigar stub dates from his visit at 7:02. The journal and the register both confirm it.",
+  "The tea smelled of bitter almonds. Cyanide had been taken from the gilding cabinet, and the cabinet was locked again. Only Edmund and Clara knew its word.",
+  "Clara had no alibi, the means, and the motive: Edmund had patented her escapement under his own name.",
+];
+const CONFESSION = "Clara Doyle doesn't deny it. “Twelve years I gave him,” she says. “He put his name on my escapement and told me the papers were with the solicitors.” At 10:38, with the piano covering every sound, she let herself into the workshop, took cyanide from the cabinet only she could open, and tipped it into the tea Edmund had just brewed. She locked the cabinet behind her, slipped out at 10:44, and later threw the time lock on you from the hall. Her ticket for the midnight train is in her coat pocket.";
+
+const GOALS = [
+  {id:"journal", title:"Open Edmund's journal", show:()=>S.seen.journal||S.seen.note, done:()=>S.solved.journal, hints:[
+    "Edmund left a note on the bench about the journal's combination.",
+    "The year the shop opened is painted on the sign above the door. Not the certificate on the wall.",
+    "MDCCCXCVI in Roman numerals is 1896. Set the journal lock to 1-8-9-6."]},
+  {id:"cabinet", title:"Open the gilding cabinet", show:()=>S.seen.cabinet, done:()=>S.solved.cabinet, hints:[
+    "The journal says Clara keeps the cabinet word in her notebook, in a clock cipher. Her notebook is on the apprentice's bench. The cipher dial is the letter clock on the clock wall.",
+    "Each time gives two letters. The hour is where the short hand points; read that letter first. Then read the letter where the long hand points. At 10 minutes past, the long hand points at the 2.",
+    "12:10 gives P A. 6:30 gives L L. 4:40 gives E T. The word is PALLET."]},
+  {id:"phone", title:"Get through on the telephone", show:()=>S.seen.phone, done:()=>S.solved.phone, hints:[
+    "The card says to dial the night supervisor's surname. Someone in this room knows her.",
+    "Check Edmund's coat by the door. On the dial, each number has letters printed beside it.",
+    "Mrs. Edith Moss. M is on 6, O is on 6, S is on 7. Dial 6-6-7-7."]},
+  {id:"register", title:"Read the door register", show:()=>S.seen.register, done:()=>S.solved.register, hints:[
+    "The glass panel needs a small key. Edmund kept his small keys locked away with the dangerous chemicals.",
+    "Look inside the gilding cabinet.",
+    "Once you have the register key, open the door register again and use it."]},
+  {id:"cuckoo", title:"Wake the cuckoo clock", show:()=>S.seen.cuckoo, done:()=>S.solved.cuckoo, hints:[
+    "Edmund's journal explains how to wake the cuckoo.",
+    "“The way the village wakes.” Who gets up first? Who works all day? Who comes out at dusk?",
+    "Baker, then Woodcutter, then Lamplighter."]},
+  {id:"grandfather", title:"Open the long-case clock", show:()=>S.seen.grandfather, done:()=>S.solved.grandfather, hints:[
+    "The photograph from the cuckoo clock explains how to open the old lady.",
+    "Her “own number” is printed on her dial.",
+    "Her dial says No. 415. Set her hands to 4:15."]},
+  {id:"door", title:"Unlock the door", show:()=>S.seen.door, done:()=>doorOpen(), hints:[
+    "Edmund's journal says where he kept the spare door key.",
+    "“The old lady” is the tall long-case clock on the clock wall.",
+    "Open the long-case clock to get the iron key, then come back to the door."]},
+  {id:"accuse", title:"Name the killer", show:()=>doorOpen(), done:()=>!!S.wn, hints:[
+    "The door register shows when the killer was in the workshop: in at 10:38, out at 10:44. Nobody else came or went in between.",
+    "Test each suspect against that window. Mrs. Moss's account of the telephone call covers three of them.",
+    "Margaret was playing, the doctor was on the telephone, and Lang was outside the terrace door at 10:40. Who's left, and who could open the poison cabinet?"]},
+];
+
+/* ---------------- State ---------------- */
+/* Shared game state (synced between devices): game, t0, pz, solved, items, ev, seen, hints, wrongs, untimed, wn.
+   Local-only: phase (room or parlour), wall, nbTab, sound, showSolution, lastSeen. */
+const PUZZLES = ["journal","cabinet","register","phone","cuckoo","grandfather","door"];
+const EV_ORDER = Object.keys(EV);
+const SOLVE_NEWS = {journal:"opened Edmund's journal", cabinet:"opened the gilding cabinet", register:"read the door register", phone:"got through to the telephone exchange", cuckoo:"woke the cuckoo clock", grandfather:"opened the long-case clock", door:"unlocked the workshop door"};
+function freshGame(){ return {game:null, t0:0, pz:{v:0,at:0,acc:0,u:null}, solved:{}, items:{}, ev:{}, seen:{}, hints:{}, wrongs:[], untimed:false, wn:null, gid:""}; }
+function defaultState(){ return Object.assign(freshGame(), {phase:"play", wall:0, nbTab:"suspects", sound:false, showSolution:false, lastSeen:0}); }
+let S = defaultState();
+const lockVals = {j:["0","0","0","0"], c:["A","A","A","A","A","A"]};
+let gfVals = {h:10, m:10};
+let accVals = {who:"", how:"", why:""};
+let dialBuf = "", lineBusy = false, cuckooSeq = [], curView = null, lastFocus = null, lastSec = null, lastScreen = null;
+let tentative = false, welcome = false, savedPz = null;
+
+function resetLocals(){ lockVals.j=["0","0","0","0"]; lockVals.c=["A","A","A","A","A","A"]; gfVals={h:10,m:10}; accVals={who:"",how:"",why:""}; cuckooSeq=[]; dialBuf=""; lineBusy=false; tentative=false; welcome=false; }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{
+    const j = localStorage.getItem(KEY);
+    if(j){ const s = Object.assign(defaultState(), JSON.parse(j));
+      if(!s.pz || typeof s.pz!=="object") s.pz = {v:0,at:0,acc:0,u:null};
+      if(!Array.isArray(s.wrongs)) s.wrongs = [];
+      return s; }
+  }catch(e){}
+  return null;
+}
+function commit(){ save(); publish(); }
+function evList(){ return Object.keys(S.ev).filter(k=>EV[k]).sort((a,b)=>(S.ev[a]-S.ev[b]) || (EV_ORDER.indexOf(a)-EV_ORDER.indexOf(b))); }
+function hintCount(){ let n=0; for(const k in S.hints) n += S.hints[k]|0; return n; }
+function doorOpen(){ return !!S.solved.door; }
+function newCode(){ const L="BCDFGHJKLMNPQRSTVWXZ"; let s=""; for(let i=0;i<4;i++) s += L[Math.floor(Math.random()*L.length)]; return s; }
+function rid(){ return Math.random().toString(36).slice(2,10); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------------- Timer ---------------- */
+function penaltyOf(g){ let h=0; const hs=g.hints||{}; for(const k in hs) h += hs[k]|0; return h*60000 + (g.wrongs||[]).length*180000; }
+function remOf(g, now){
+  if(!g.t0) return TOTAL;
+  const pz = g.pz || {at:0, acc:0};
+  const end = pz.at>0 ? pz.at : now;
+  return Math.max(0, TOTAL - (end - g.t0 - (pz.acc||0)) - penaltyOf(g));
+}
+function remaining(){ return S.untimed ? null : remOf(S, Date.now()); }
+function paused(){ return !S.untimed && S.pz.at>0; }
+function fmt(ms){ const s = Math.ceil(ms/1000); const m = Math.floor(s/60); return String(m).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+function clock12(totalMin){ const h24 = Math.floor(totalMin/60)%24, m = totalMin%60; const h = h24%12===0?12:h24%12; return h+":"+String(m).padStart(2,"0")+" "+(h24<12?"AM":"PM"); }
+function gameTime(){ if(S.untimed) return "After 12:00 AM"; return clock12(23*60+15+Math.floor((TOTAL-remaining())/60000)); }
+function screen(){
+  if(!S.game) return "intro";
+  if(S.wn) return "won";
+  if(!S.untimed && S.t0 && remaining()<=0) return "lost";
+  return S.phase==="accuse" ? "accuse" : "play";
+}
+function pauseClock(){
+  if(paused() || S.untimed || !S.t0) return;
+  const now = Date.now();
+  S.pz = {v:Math.max(now, S.pz.v+1), at:now, acc:S.pz.acc, u:myId};
+  tentative = false; welcome = false;
+  commit(); syncPauseSheet(); updateTimerDOM();
+}
+function resumeClock(){
+  if(!S.pz.at) { syncPauseSheet(); return; }
+  const now = Date.now();
+  S.pz = {v:Math.max(now, S.pz.v+1), at:0, acc:S.pz.acc + Math.max(0, now - S.pz.at), u:myId};
+  tentative = false; welcome = false;
+  commit(); syncPauseSheet(); updateTimerDOM();
+}
+function updateTimerDOM(){
+  const tEl = $("#timer"), cEl = $("#gclock"), lEl = $("#tlabel");
+  if(!tEl) return;
+  if(S.untimed){ tEl.textContent = "Overtime"; tEl.className = "timer paused"; if(lEl) lEl.textContent = "The train has gone"; }
+  else {
+    const rem = remaining();
+    tEl.textContent = fmt(rem);
+    tEl.className = "timer" + (paused() ? " paused" : rem < 5*60000 ? " low" : "");
+    if(lEl) lEl.textContent = paused() ? "Paused" : "Last train in";
+  }
+  if(cEl) cEl.textContent = gameTime();
+}
+function tick(){
+  const sc = screen();
+  if(sc!==lastScreen){ render(); return; }
+  if(sc==="intro"){ updateLobbyTimes(); return; }
+  if(sc!=="play" && sc!=="accuse") return;
+  updateTimerDOM();
+  if(!S.untimed && !paused()){
+    const sec = Math.ceil(remaining()/1000);
+    if(sec!==lastSec){ lastSec = sec; tickSound(sec); if(sec%2===0){ S.lastSeen = Date.now(); save(); } }
+  }
+}
+
+const isNum = x => typeof x==="number" && isFinite(x);
+const idStr = x => typeof x==="string" ? x.slice(0,200) : null;
+function merge(src, fromBy){
+  const news = [];
+  if(!src || typeof src!=="object") return news;
+  if(isNum(src.t0) && src.t0>0 && (!S.t0 || src.t0 < S.t0)){ S.t0 = src.t0; news.push({k:"sync"}); }
+  const pz = src.pz;
+  if(pz && typeof pz==="object" && isNum(pz.v) && pz.v > S.pz.v && isNum(pz.at) && isNum(pz.acc)){
+    const was = S.pz.at>0;
+    S.pz = {v:pz.v, at:Math.max(0,pz.at), acc:Math.max(0,pz.acc), u:idStr(pz.u)};
+    const now = S.pz.at>0;
+    news.push(was!==now ? {k:now?"paused":"resumed", u:S.pz.u||fromBy} : {k:"sync"});
+  }
+  if(src.sv && typeof src.sv==="object") for(const k of PUZZLES){
+    if(src.sv[k] && !S.solved[k]){ S.solved[k] = idStr(src.sv[k]) || 1; news.push({k:"solve", p:k, u: typeof S.solved[k]==="string" ? S.solved[k] : fromBy}); }
+  }
+  if(src.it && typeof src.it==="object") for(const k of Object.keys(ITEMS)) if(src.it[k] && !S.items[k]){ S.items[k] = 1; news.push({k:"item"}); }
+  if(src.ev && typeof src.ev==="object") for(const k of EV_ORDER){
+    const v = src.ev[k];
+    if(isNum(v) && (S.ev[k]==null || v < S.ev[k])){ const isNew = S.ev[k]==null; S.ev[k] = Math.max(0, Math.round(v)); news.push({k:isNew?"ev":"sync"}); }
+  }
+  if(src.sn && typeof src.sn==="object") for(const k of Object.keys(OBJ)) if(src.sn[k] && !S.seen[k]){ S.seen[k] = true; news.push({k:"sync"}); }
+  if(src.h && typeof src.h==="object") for(const g of GOALS){
+    const v = src.h[g.id];
+    if(isNum(v)){ const nv = Math.min(g.hints.length, Math.max(0, Math.floor(v))); if(nv > (S.hints[g.id]||0)){ S.hints[g.id] = nv; news.push({k:"hint", u:fromBy}); } }
+  }
+  if(Array.isArray(src.w)) for(const x of src.w.slice(0,30)){
+    if(typeof x==="string" && x.length<=24 && !S.wrongs.includes(x) && S.wrongs.length<30){ S.wrongs.push(x); news.push({k:"wrong", u:fromBy}); }
+  }
+  if(src.ut && !S.untimed){ S.untimed = true; news.push({k:"untimed"}); }
+  const wn = src.wn;
+  if(wn && typeof wn==="object" && isNum(wn.at) && (!S.wn || wn.at < S.wn.at)){
+    const first = !S.wn;
+    S.wn = {at:wn.at, r:isNum(wn.r) ? Math.max(0, wn.r) : null, u:idStr(wn.u)};
+    if(first) news.push({k:"won", u:S.wn.u||fromBy});
+  }
+  return news;
+}
+
+/* ---------------- Playing together (free public relays) ----------------
+   Each device keeps a copy of the shared game and posts it, with its player's
+   name and where they are, to a small MQTT relay channel named after the game
+   code. Everyone in the game merges what they hear: progress only ever grows
+   (union of solved locks, keys, evidence, hints and wrong guesses), the earliest
+   start time wins, and the newest pause/resume wins. The same update goes to
+   several free public relays at once, so one being down doesn't stop the game.
+   Messages are kept by the relay ("retained"), so a player who rejoins later
+   still catches up. */
+const RELAYS = (()=>{
+  try{ const q = new URLSearchParams(location.search).get("relay"); if(q) return q.split(",").filter(u=>/^wss?:\/\//.test(u)); }catch(e){}
+  return ["wss://broker.emqx.io:8084/mqtt", "wss://broker.hivemq.com:8884/mqtt", "wss://test.mosquitto.org:8081/mqtt"];
+})();
+const NS = "clockmakers-last-hour/v1/";
+const PKEY = "clockmakers-last-hour-player";
+const enc = new TextEncoder(), dec = new TextDecoder();
+
+/* A tiny MQTT 3.1.1 client over WebSocket: connect, subscribe, publish (QoS 0), keep-alive, reconnect. */
+function mqVarint(n){ const out=[]; do{ let b = n % 128; n = Math.floor(n/128); if(n>0) b |= 128; out.push(b); }while(n>0); return out; }
+function mqStr(s){ const b = enc.encode(s); return [b.length>>8, b.length&255, ...b]; }
+function mqPacket(first, body){ return new Uint8Array([first, ...mqVarint(body.length), ...body]); }
+class Relay {
+  constructor(url, onMessage, onState){
+    this.url = url; this.onMessage = onMessage; this.onState = onState;
+    this.subs = new Set(); this.connected = false; this.backoff = 1500; this.nextId = 1; this.buf = new Uint8Array(0);
+    this.open();
+  }
+  open(){
+    if(this.closed) return;
+    let ws;
+    try{ ws = new WebSocket(this.url, ["mqtt"]); }catch(e){ this.retry(); return; }
+    ws.binaryType = "arraybuffer"; this.ws = ws; this.buf = new Uint8Array(0);
+    const cid = "clh" + Math.random().toString(36).slice(2,12);
+    ws.onopen = ()=>{ this.raw(mqPacket(0x10, [...mqStr("MQTT"), 4, 0x02, 0, 60, ...mqStr(cid)])); };
+    ws.onmessage = ev=>{ if(ev.data instanceof ArrayBuffer) this.feed(new Uint8Array(ev.data)); };
+    ws.onclose = ()=>{ const was = this.connected; this.connected = false; clearInterval(this.ping); if(was) this.onState(); this.retry(); };
+    ws.onerror = ()=>{ try{ ws.close(); }catch(e){} };
+  }
+  retry(){ if(this.closed) return; clearTimeout(this.rt); this.rt = setTimeout(()=>this.open(), this.backoff); this.backoff = Math.min(this.backoff*2, 30000); }
+  raw(bytes){ try{ if(this.ws && this.ws.readyState===1) this.ws.send(bytes); }catch(e){} }
+  feed(chunk){
+    const b = new Uint8Array(this.buf.length + chunk.length); b.set(this.buf); b.set(chunk, this.buf.length); this.buf = b;
+    for(;;){
+      const buf = this.buf; if(buf.length < 2) return;
+      let len = 0, mul = 1, i = 1, byte;
+      do{ if(i >= buf.length) return; byte = buf[i++]; len += (byte & 127) * mul; mul *= 128; if(i > 5){ this.ws.close(); return; } }while(byte & 128);
+      if(buf.length < i + len) return;
+      this.handle(buf[0]>>4, buf[0]&15, buf.subarray(i, i+len));
+      this.buf = buf.slice(i+len);
+    }
+  }
+  handle(type, flags, body){
+    if(type===2){ // CONNACK
+      if(body[1]===0){
+        this.connected = true; this.backoff = 1500;
+        for(const t of this.subs) this.sendSub(t);
+        clearInterval(this.ping); this.ping = setInterval(()=>this.raw(new Uint8Array([0xC0,0])), 25000);
+        this.onState();
+      } else { try{ this.ws.close(); }catch(e){} }
+    } else if(type===3){ // PUBLISH
+      const qos = (flags>>1)&3, retained = !!(flags&1);
+      const tl = (body[0]<<8)|body[1];
+      const topic = dec.decode(body.subarray(2, 2+tl));
+      let i = 2+tl;
+      if(qos>0){ const id = (body[i]<<8)|body[i+1]; i += 2; if(qos===1) this.raw(new Uint8Array([0x40,2,id>>8,id&255])); }
+      try{ this.onMessage(topic, body.subarray(i), retained); }catch(e){ console.error(e); }
+    }
+  }
+  pid(){ this.nextId = (this.nextId % 65000) + 1; return [this.nextId>>8, this.nextId&255]; }
+  sendSub(t){ this.raw(mqPacket(0x82, [...this.pid(), ...mqStr(t), 0])); }
+  subscribe(t){ this.subs.add(t); if(this.connected) this.sendSub(t); }
+  unsubscribe(t){ if(!this.subs.delete(t)) return; if(this.connected) this.raw(mqPacket(0xA2, [...this.pid(), ...mqStr(t)])); }
+  publish(topic, text, retain){
+    if(!this.connected) return false;
+    this.raw(mqPacket(0x30 | (retain?1:0), [...mqStr(topic), ...enc.encode(text)]));
+    return true;
+  }
+}
+
+function loadPlayer(){
+  try{ const p = JSON.parse(localStorage.getItem(PKEY)||"null"); if(p && /^[a-z0-9]{6,16}$/.test(p.pid)) return {pid:p.pid, name:cleanName(p.name)}; }catch(e){}
+  const p = {pid:(rid()+rid()).slice(0,12).replace(/[^a-z0-9]/g,"0"), name:""};
+  try{ localStorage.setItem(PKEY, JSON.stringify(p)); }catch(e){}
+  return p;
+}
+function savePlayer(){ try{ localStorage.setItem(PKEY, JSON.stringify(me)); }catch(e){} }
+function cleanName(n){ return typeof n==="string" ? n.replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/g,"").trim().slice(0,20) : ""; }
+const me = loadPlayer();
+const myId = me.pid;
+const CONN = Math.random().toString(36).slice(2,10);
+const bootAt = Date.now();
+let relays = [], peersMap = {}, subTopic = null, pubTimer = null, pendingJoin = null, everConnected = false, teamTimer = null;
+
+function relayOnline(){ return relays.some(r=>r.connected); }
+function netStatus(){ return relayOnline() ? "online" : (Date.now() - bootAt < 8000 && !everConnected) ? "connecting" : "offline"; }
+function wire(){ return {t0:S.t0, pz:S.pz, sv:S.solved, it:S.items, ev:S.ev, sn:S.seen, h:S.hints, w:S.wrongs, ut:S.untimed?1:0, wn:S.wn}; }
+function payload(extra){
+  return Object.assign({v:1, pid:myId, conn:CONN, n:me.name||"", gid:S.gid, ts:Date.now(), s:wire(), at:{w:S.wall, o:curView||"", p:S.phase==="accuse"?"parlour":"room"}}, extra||{});
+}
+function publishNow(extra){
+  clearTimeout(pubTimer); pubTimer = null;
+  if(!S.game || !S.gid) return;
+  const text = JSON.stringify(payload(extra));
+  relays.forEach(r=>r.publish(NS + S.game + "/" + myId, text, true));
+}
+function publish(force){
+  if(!S.game) return;
+  if(force){ publishNow(); return; }
+  if(!pubTimer) pubTimer = setTimeout(publishNow, 250);
+}
+function subscribeGame(code){
+  const t = code ? NS + code + "/+" : null;
+  if(t===subTopic) return;
+  if(subTopic) relays.forEach(r=>r.unsubscribe(subTopic));
+  peersMap = {};
+  subTopic = t;
+  if(t) relays.forEach(r=>r.subscribe(t));
+}
+function onRelayMessage(topic, bytes, retained){
+  if(!bytes.length || bytes.length > 16000) return;
+  const parts = topic.split("/");
+  if(parts.length!==4 || NS !== parts[0]+"/"+parts[1]+"/") return;
+  const code = parts[2], pidT = parts[3];
+  let m; try{ m = JSON.parse(dec.decode(bytes)); }catch(e){ return; }
+  if(!m || typeof m!=="object" || m.v!==1 || m.pid!==pidT || !/^[a-z0-9]{6,16}$/.test(m.pid)) return;
+  if(m.conn===CONN) return;
+  const now = Date.now(), ts = isNum(m.ts) ? m.ts : 0;
+  const heard = retained ? Math.min(now, ts) : now;
+  const prev = peersMap[m.pid];
+  peersMap[m.pid] = {pid:m.pid, n:cleanName(m.n), gid:typeof m.gid==="string" ? m.gid.slice(0,16) : "", code,
+    at:(m.at && typeof m.at==="object") ? {w:m.at.w|0, o:typeof m.at.o==="string"?m.at.o:"", p:m.at.p==="parlour"?"parlour":"room"} : null,
+    left:!!m.left, heard:Math.max(heard, prev && prev.ts===ts ? prev.heard : 0), ts};
+  if(prev && prev.ts > ts){ peersMap[m.pid] = prev; }
+  if(pendingJoin && code===pendingJoin.code){ pendingJoin.found[m.pid] = m; return; }
+  if(S.game===code && S.gid && m.gid===S.gid){
+    const news = merge(m.s, m.pid).map(n=>Object.assign(n, {self:m.pid===myId}));
+    if(news.length){ save(); afterMerge(news); publish(); }
+  }
+  if(!teamTimer) teamTimer = setTimeout(()=>{ teamTimer = null; renderTeam(); }, 120);
+}
+function teammates(){
+  if(!S.game) return [];
+  const now = Date.now();
+  return Object.values(peersMap).filter(p=>p.code===S.game && p.gid===S.gid && p.pid!==myId && !p.left && now - p.heard < 40000);
+}
+function knownTeam(){ return Object.values(peersMap).filter(p=>p.code===S.game && p.gid===S.gid && p.pid!==myId); }
+function onRelayState(){
+  if(relayOnline()){
+    if(!everConnected){ everConnected = true; setTimeout(welcomeBackCheck, 3000); }
+    publish(true);
+  }
+  renderTeam(); renderLobby();
+}
+function connectNet(){
+  relays = RELAYS.map(u=>new Relay(u, onRelayMessage, onRelayState));
+  if(S.game) subscribeGame(S.game);
+  setInterval(()=>{ if(S.game && relayOnline()) publishNow(); renderTeam(); }, 12000);
+  setTimeout(()=>{ if(!everConnected) welcomeBackCheck(); renderTeam(); renderLobby(); }, 8000);
+}
+function nameOf(id){
+  if(!id) return "A teammate";
+  if(id===myId) return "You";
+  const p = peersMap[id];
+  return (p && p.n) || "A teammate";
+}
+const PRI = {won:6, solve:5, wrong:4, hint:3, paused:2, resumed:2, untimed:2};
+function teamToasts(news){
+  const ext = news.filter(n=>!n.self && PRI[n.k]);
+  if(!ext.length){
+    const evn = news.filter(n=>!n.self && n.k==="ev").length;
+    if(evn && (screen()==="play"||screen()==="accuse")) toast(evn===1 ? "Your team found new evidence. It's in the notebook." : `Your team found ${evn} new pieces of evidence.`);
+    return;
+  }
+  ext.sort((a,b)=>PRI[b.k]-PRI[a.k]);
+  const n = ext[0];
+  const who = nameOf(n.u);
+  if(who==="You") return;
+  const msg = {
+    won: `${who} named the killer.`,
+    solve: `${who} ${SOLVE_NEWS[n.p]||"solved a puzzle"}.`,
+    wrong: `${who} made a wrong accusation.${S.untimed?"":" (−3:00)"}`,
+    hint: `${who} used a hint.${S.untimed?"":" (−1:00)"}`,
+    paused: `${who} paused the clock.`,
+    resumed: `${who} restarted the clock.`,
+    untimed: "Your team kept investigating after midnight.",
+  }[n.k];
+  if(msg) toast(msg);
+}
+function afterMerge(news){
+  if(tentative && savedPz && S.pz.v > savedPz.v){ tentative = false; welcome = false; }
+  const sc = screen();
+  if(sc!==lastScreen){ render(); }
+  else if(sc==="play" || sc==="accuse"){
+    if(news.some(n=>n.k==="solve" || n.k==="item")){ if(sc==="play") renderStage(); refreshView(); }
+    else if(sc==="play") renderObjs();
+    renderNotes(); updateTimerDOM();
+  }
+  syncPauseSheet();
+  teamToasts(news);
+}
+function welcomeBackCheck(){
+  if(!tentative) return;
+  if(teammates().length){
+    if(savedPz && S.pz.v===savedPz.v) S.pz = savedPz;
+    tentative = false; welcome = false;
+    save(); syncPauseSheet(); updateTimerDOM();
+    toast("You're back with your team.");
+    return;
+  }
+  S.pz = {v:Math.max(Date.now(), S.pz.v+1), at:S.pz.at, acc:S.pz.acc, u:myId};
+  tentative = false;
+  commit();
+}
+
+/* ---------------- Sound ---------------- */
+let actx = null;
+function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; } } if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); } }
+function tone(freq,dur,type,vol,when){
+  if(!S.sound || !actx) return;
+  try{
+    const t = actx.currentTime + (when||0);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type||"sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol||.06, t); g.gain.exponentialRampToValueAtTime(.0001, t+dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.02);
+  }catch(e){}
+}
+function tickSound(sec){ const low = remaining() < 5*60000; tone(sec%2?1500:1900, .025, "square", low?.035:.018); }
+function unlockSound(){ tone(660,.2,"triangle",.1); tone(990,.35,"triangle",.08,.12); }
+function wrongSound(){ tone(130,.28,"sawtooth",.05); }
+
+/* ---------------- SVG helpers ---------------- */
+const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+const ARABIC = ["1","2","3","4","5","6","7","8","9","10","11","12"];
+const LETTER_DIAL = ["W","A","S","E","N","L","D","T","H","R","C","P"];
+const SERIF = "'IM Fell English SC', Georgia, serif";
+const MONO = "'Courier Prime', 'Courier New', monospace";
+function f1(n){ return Math.round(n*10)/10; }
+function pt(cx,cy,r,deg){ const a = deg*Math.PI/180; return [cx + r*Math.sin(a), cy - r*Math.cos(a)]; }
+function face(o){
+  const cx=o.cx, cy=o.cy, r=o.r, ink=o.ink||"#2a2219";
+  let s = "";
+  if(o.ring!=="none") s += `<circle cx="${cx}" cy="${cy}" r="${f1(r*1.1)}" fill="${o.ring||"url(#brassg)"}"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${o.fill||"#efe6cf"}"/>`;
+  if(o.ticks!==false){
+    for(let i=0;i<60;i++){
+      const big = i%5===0; const [x1,y1]=pt(cx,cy,r*.95,i*6), [x2,y2]=pt(cx,cy,r*(big?.86:.91),i*6);
+      s += `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" stroke="${ink}" stroke-width="${f1(Math.max(.4,r*(big?.025:.012)))}"/>`;
+    }
+  }
+  if(o.labels) o.labels.forEach((L,i)=>{ const [x,y]=pt(cx,cy,r*(o.lr||.72),(i+1)*30); s += `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central" font-family="${o.font||SERIF}" font-size="${f1(r*(o.ls||.2))}" fill="${ink}">${L}</text>`; });
+  if(o.inner) o.inner.forEach((L,i)=>{ const [x,y]=pt(cx,cy,r*(o.ir||.48),(i+1)*30); s += `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central" font-family="${MONO}" font-size="${f1(r*(o.is||.1))}" fill="#7a6a55">${L}</text>`; });
+  (o.text||[]).forEach(t=>{ s += `<text x="${cx}" y="${f1(cy+r*t.dy)}" text-anchor="middle" dominant-baseline="central" font-family="${t.font||SERIF}" font-size="${f1(r*t.s)}" fill="${t.fill||ink}" letter-spacing="${t.ls||0}">${t.t}</text>`; });
+  if(o.hour!=null){
+    const mm = o.minute||0, ha = ((o.hour%12)+mm/60)*30, ma = mm*6;
+    const [hx,hy]=pt(cx,cy,r*.5,ha), [mx,my]=pt(cx,cy,r*.78,ma), hc=o.hand||"#1d1610";
+    s += `<line x1="${cx}" y1="${cy}" x2="${f1(hx)}" y2="${f1(hy)}" stroke="${hc}" stroke-width="${f1(Math.max(1,r*.065))}" stroke-linecap="round"/>`;
+    s += `<line x1="${cx}" y1="${cy}" x2="${f1(mx)}" y2="${f1(my)}" stroke="${hc}" stroke-width="${f1(Math.max(.8,r*.035))}" stroke-linecap="round"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${f1(Math.max(1.2,r*.06))}" fill="${o.cap||"#8e6e2e"}"/>`;
+  }
+  return s;
+}
+function hot(id, inner, hit){
+  const h = hit ? `<rect x="${hit[0]}" y="${hit[1]}" width="${hit[2]}" height="${hit[3]}" fill="transparent"/>` : "";
+  return `<g class="hot" data-hot="${id}" role="button" tabindex="0" aria-label="${OBJ[id]}">${h}${inner}</g>`;
+}
+function rng(seed){ return ()=> (seed = (seed*16807)%2147483647)/2147483647; }
+const BASE = `<rect width="800" height="404" fill="url(#wp)"/><rect y="396" width="800" height="10" fill="#24170c"/><rect y="406" width="800" height="74" fill="url(#floor)"/>`;
+const VIG = `<rect width="800" height="480" fill="url(#vig)" pointer-events="none"/>`;
+function svgWrap(inner, label){ return `<svg viewBox="0 0 800 480" role="group" aria-label="${label}">${inner}${VIG}</svg>`; }
+
+/* figures for the cuckoo chains */
+const FIG = {woodcutter:"Woodcutter", lamplighter:"Lamplighter", baker:"Baker"};
+function figure(kind){
+  let p = "";
+  if(kind==="woodcutter") p = `<path d="M34 22 L42 56" stroke="#4a2f1b" stroke-width="3" stroke-linecap="round"/><path d="M31 16 l13 -5 l2 11 l-12 2z" fill="#a9b0ad"/><path d="M14 6 q8 -8 16 0 v4 h-16z" fill="#7a2f26"/>`;
+  if(kind==="lamplighter") p = `<path d="M38 4 L38 58" stroke="#4a2f1b" stroke-width="3"/><path d="M38 -4 q5 5 0 9 q-5 -4 0 -9z" fill="#e9a23b"/><path d="M14 8 h16 v-4 h-16z M12 8 h20" stroke="#2b2620" stroke-width="3" fill="#2b2620"/>`;
+  if(kind==="baker") p = `<rect x="15" y="-6" width="14" height="12" rx="5" fill="#f1ebdd"/><ellipse cx="22" cy="36" rx="12" ry="5.5" fill="#c88a4a"/><path d="M15 34 l3 4 M21 33 l3 4 M27 34 l3 4" stroke="#8a5a2a" stroke-width="1.2"/>`;
+  return `<circle cx="22" cy="13" r="7.5" fill="#a77447"/><path d="M12 22 h20 l5 36 h-30z" fill="#8a5d36"/><path d="M12 22 h20 l5 36 h-30z" fill="none" stroke="#5a3a20" stroke-width="1.2"/>${p}`;
+}
+
+/* ---------------- Scene art ---------------- */
+function artGrandfather(){
+  const open = S.solved.grandfather;
+  return `<path d="M64 76 L135 26 L206 76 Z" fill="#4a2f1b"/><circle cx="135" cy="30" r="6" fill="url(#brassg)"/>
+  <rect x="70" y="74" width="130" height="122" fill="url(#woodg)" stroke="#2c1c10" stroke-width="3"/>
+  ${face({cx:135,cy:134,r:44,labels:ROMAN,lr:.74,ls:.14,hour:10,minute:10,text:[{t:"HARROW &amp; SON",dy:-.33,s:.085,ls:.5},{t:"No. 415",dy:.36,s:.12,font:MONO}]})}
+  <rect x="88" y="196" width="94" height="168" fill="url(#woodg)" stroke="#2c1c10" stroke-width="3"/>
+  ${open ? `<rect x="98" y="206" width="74" height="148" fill="#0f0a05"/><polygon points="172,206 198,214 198,350 172,354" fill="#6a4529" stroke="#2c1c10" stroke-width="2"/>`
+         : `<path d="M106 342 V236 a29 29 0 0 1 58 0 V342 Z" fill="#170f08" stroke="#8e6e2e" stroke-width="2"/><circle cx="173" cy="282" r="2.6" fill="#c8a14b"/>`}
+  <g class="swing" style="transform-origin:135px 212px"><line x1="135" y1="212" x2="135" y2="300" stroke="#c8a14b" stroke-width="2"/><circle cx="135" cy="306" r="14" fill="url(#brassg)"/></g>
+  <rect x="78" y="364" width="114" height="36" fill="#3f2817" stroke="#2c1c10" stroke-width="3"/><rect x="72" y="398" width="126" height="8" fill="#2c1c10"/>`;
+}
+function artCuckoo(){
+  const open = S.solved.cuckoo;
+  const leaves = [[320,104],[345,86],[370,68],[410,68],[435,86],[460,104]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="11" ry="6" fill="#4e3320" transform="rotate(${x<390?-34:34} ${x} ${y})"/>`).join("");
+  const chain = (x,y2)=>`<line x1="${x}" y1="244" x2="${x}" y2="${y2}" stroke="#b8a37a" stroke-width="2" stroke-dasharray="2 2"/>`;
+  return `<polygon points="296,120 390,52 484,120" fill="#3a2414"/>${leaves}<ellipse cx="390" cy="56" rx="16" ry="8" fill="#4e3320"/>
+  <rect x="314" y="116" width="152" height="128" fill="#6b4529" stroke="#3a2414" stroke-width="3"/>
+  ${open ? `<path d="M374 156 v-22 a16 16 0 0 1 32 0 v22 z" fill="#0b0703"/><rect x="350" y="132" width="20" height="26" fill="#2b1a0d" stroke="#c8a14b" stroke-width="1"/>`
+         : `<path d="M374 156 v-22 a16 16 0 0 1 32 0 v22 z" fill="#2b1a0d" stroke="#c8a14b" stroke-width="1.5"/>`}
+  <path d="M318 172 q-16 12 -4 30 M462 172 q16 12 4 30" stroke="#4e3320" stroke-width="6" fill="none" stroke-linecap="round"/>
+  ${face({cx:390,cy:200,r:30,labels:ARABIC,lr:.72,ls:.19,font:MONO,ring:"#3a2414",hour:11,minute:15})}
+  ${chain(350,312)}${chain(390,334)}${chain(430,300)}
+  <g transform="translate(338 312) scale(.55)">${figure("woodcutter")}</g>
+  <g transform="translate(378 334) scale(.55)">${figure("lamplighter")}</g>
+  <g transform="translate(418 300) scale(.55)">${figure("baker")}</g>`;
+}
+function artLetterClock(){
+  return face({cx:628,cy:150,r:66,labels:LETTER_DIAL,lr:.76,ls:.22,inner:ARABIC,ir:.5,is:.1,hour:10,minute:10}) +
+    `<rect x="580" y="232" width="96" height="18" rx="2" fill="url(#brassg)"/><text x="628" y="244" text-anchor="middle" font-family="${MONO}" font-size="8.5" fill="#3a2a10" letter-spacing="1">SHORT, THEN LONG</text>`;
+}
+function artRepairs(){
+  return `<rect x="520" y="334" width="252" height="9" fill="#3a2515"/><path d="M542 343 v18 h12 M750 343 v18 h-12" stroke="#3a2515" stroke-width="4" fill="none"/>
+  <path d="M534 334 v-36 a30 26 0 0 1 60 0 v36z" fill="#5b3b23"/>${face({cx:564,cy:304,r:14,hour:3,minute:0})}
+  <rect x="614" y="296" width="40" height="38" rx="2" fill="url(#brassg)"/><rect x="620" y="302" width="28" height="22" fill="#efe6cf"/><path d="M634 313 v-7 M634 313 h6" stroke="#2a2219" stroke-width="1.3"/><path d="M624 296 q10 -14 20 0" stroke="#c8a14b" stroke-width="3" fill="none"/>
+  ${face({cx:712,cy:306,r:22,hour:7,minute:35})}<rect x="694" y="326" width="36" height="8" fill="#2c1c10"/>
+  <line x1="564" y1="343" x2="566" y2="350" stroke="#ccc" stroke-width=".8"/><rect x="556" y="350" width="22" height="14" fill="#efe6cf" transform="rotate(6 567 357)"/>
+  <line x1="634" y1="343" x2="634" y2="350" stroke="#ccc" stroke-width=".8"/><rect x="623" y="350" width="22" height="14" fill="#efe6cf" transform="rotate(-4 634 357)"/>
+  <line x1="712" y1="343" x2="710" y2="350" stroke="#ccc" stroke-width=".8"/><rect x="699" y="350" width="22" height="14" fill="#efe6cf" transform="rotate(8 710 357)"/>`;
+}
+function sceneBench(){
+  let s = BASE;
+  s += `<rect x="96" y="56" width="400" height="162" rx="3" fill="#4b321e" stroke="#2a1b0f" stroke-width="4"/>`;
+  for(let x=112;x<=482;x+=18) for(let y=70;y<=206;y+=18) s += `<circle cx="${x}" cy="${y}" r="1.8" fill="#2c1d10"/>`;
+  ["#b23e2e","#c8a14b","#2f4a3c","#7b5333","#c8a14b"].forEach((c,i)=>{ const x=130+i*18; s += `<rect x="${x-4}" y="78" width="8" height="26" rx="3" fill="${c}"/><line x1="${x}" y1="104" x2="${x}" y2="${150+i*7}" stroke="#a9b0ad" stroke-width="2.4"/>`; });
+  [0,1,2].forEach(i=>{ const x=236+i*18; s += `<rect x="${x}" y="80" width="7" height="96" rx="2" fill="#7f8784"/><rect x="${x-1}" y="170" width="9" height="34" rx="3" fill="#6b4a2a"/>`; });
+  s += `<path d="M318 84 l4 22 M330 84 l-4 22" stroke="#9aa3a0" stroke-width="4" stroke-linecap="round"/><circle cx="324" cy="108" r="3" fill="#c8a14b"/><path d="M322 110 l-10 70 M326 110 l10 70" stroke="#b23e2e" stroke-width="6" stroke-linecap="round"/>`;
+  s += `<rect x="372" y="78" width="6" height="120" fill="#a9b0ad"/><path d="M378 82 h22 v8 h-14 M378 110 h18 v8 h-12" stroke="#a9b0ad" stroke-width="4" fill="none"/>`;
+  s += `<path d="M440 80 l-6 90 M446 80 l6 90" stroke="#c8a14b" stroke-width="3" stroke-linecap="round"/>`;
+  s += `<rect x="556" y="62" width="168" height="118" fill="#2a1c10" stroke="#8e6e2e" stroke-width="4"/><rect x="568" y="74" width="144" height="94" fill="#d8ccad"/>
+    <text x="640" y="98" text-anchor="middle" font-family="${SERIF}" font-size="11" fill="#4a3a26">Worshipful Company</text><text x="640" y="112" text-anchor="middle" font-family="${SERIF}" font-size="11" fill="#4a3a26">of Clockmakers</text>
+    <line x1="600" y1="122" x2="680" y2="122" stroke="#8e6e2e"/><text x="640" y="140" text-anchor="middle" font-family="${SERIF}" font-size="9" fill="#4a3a26">Edmund Harrow, Freeman</text><text x="640" y="154" text-anchor="middle" font-family="${SERIF}" font-size="9" fill="#4a3a26">MDCCCXCIV</text>`;
+  s += `<polygon points="606,176 688,176 784,298 500,298" fill="url(#cone)" pointer-events="none"/>`;
+  s += `<rect x="34" y="296" width="732" height="22" fill="url(#woodg)"/><rect x="34" y="296" width="732" height="3" fill="#9a6b42"/><rect x="34" y="318" width="732" height="14" fill="#3a2515"/>
+    <rect x="54" y="332" width="20" height="72" fill="#3a2515"/><rect x="726" y="332" width="20" height="72" fill="#3a2515"/>
+    <rect x="300" y="332" width="200" height="40" fill="#4a2f1b" stroke="#2c1c10" stroke-width="2"/><circle cx="400" cy="352" r="4" fill="url(#brassg)"/>
+    <ellipse cx="640" cy="304" rx="150" ry="9" fill="#f3d48c" opacity=".14" pointer-events="none"/>`;
+  s += `<path d="M738 292 L718 168 L662 146" stroke="#2b2b28" stroke-width="6" fill="none" stroke-linecap="round"/><polygon points="618,142 676,142 692,178 602,178" fill="#2f5240"/><ellipse cx="647" cy="178" rx="45" ry="5" fill="#f3d48c"/><ellipse cx="738" cy="294" rx="26" ry="6" fill="#2b2b28"/>`;
+  s += hot("journal", `<polygon points="116,292 128,266 240,266 232,292" fill="#6e2c22"/><polygon points="116,292 232,292 232,298 116,298" fill="#e6d9bb"/><polygon points="232,292 240,266 240,272 232,298" fill="#d8caa8"/><rect x="194" y="266" width="10" height="32" fill="#4a1d16"/>
+    ${S.solved.journal ? `<path d="M195 281 v-9 a4.5 4.5 0 0 1 9 0" fill="none" stroke="#d9b45e" stroke-width="2"/>` : `<path d="M195 281 v-5 a4.5 4.5 0 0 1 9 0 v5" fill="none" stroke="#d9b45e" stroke-width="2"/>`}<rect x="191" y="280" width="17" height="13" rx="2" fill="url(#brassg)"/><circle cx="199.5" cy="286" r="1.6" fill="#3a2a10"/>`, [108,250,140,56]);
+  s += hot("note", `<polygon points="254,294 266,280 334,282 326,296" fill="#efe6cf"/><path d="M270 286 q8 -2 16 0 t18 0 M266 291 q10 -2 20 0 t22 0" stroke="#6b5a44" stroke-width="1" fill="none"/>`, [248,266,92,34]);
+  s += hot("teacup", `<ellipse cx="400" cy="294" rx="36" ry="6" fill="#d9d0bb"/><path d="M376 262 h48 q-2 30 -14 32 h-20 q-12 -2 -14 -32z" fill="#efe7d4"/><path d="M377 270 h46" stroke="#5c7a99" stroke-width="2"/><ellipse cx="400" cy="262" rx="24" ry="4" fill="#5b3b1c"/><path d="M423 268 q14 2 8 14 q-4 6 -10 4" fill="none" stroke="#efe7d4" stroke-width="4"/>
+    <rect x="448" y="280" width="44" height="14" rx="2" fill="url(#brassg)"/><ellipse cx="470" cy="264" rx="22" ry="16" fill="#b06a3a"/><path d="M490 260 l16 -8" stroke="#b06a3a" stroke-width="5" stroke-linecap="round"/><rect x="464" y="244" width="12" height="6" rx="2" fill="#7a4626"/><path d="M452 256 q18 -26 36 0" stroke="#3a2515" stroke-width="3" fill="none"/>`, [362,234,150,66]);
+  s += hot("cigar", `<ellipse cx="556" cy="292" rx="28" ry="7" fill="#8e6e2e"/><ellipse cx="556" cy="290" rx="21" ry="4" fill="#2f2213"/><g transform="rotate(-8 558 284)"><rect x="540" y="280" width="38" height="8" rx="4" fill="#6b4226"/><rect x="566" y="280" width="7" height="8" fill="#c8a14b"/><rect x="537" y="280" width="7" height="8" rx="3" fill="#8f8a80"/></g>`, [520,266,72,34]);
+  s += hot("mallet", `<rect x="600" y="270" width="46" height="24" rx="4" fill="url(#brassg)"/><rect x="646" y="278" width="62" height="8" rx="3" fill="#a07a4c"/>`, [594,262,120,36]);
+  s += `<g transform="rotate(-72 352 446)"><ellipse cx="352" cy="420" rx="36" ry="9" fill="#6b4529"/><path d="M326 424 l-8 44 M378 424 l8 44 M352 428 v42" stroke="#4a2f1b" stroke-width="5"/></g>`;
+  s += hot("watch", `<path d="M198 448 q22 12 44 -2 q10 -6 24 2" stroke="#c8a14b" stroke-width="2" fill="none" stroke-dasharray="3 2"/>${face({cx:184,cy:448,r:12,ticks:false,hour:10,minute:42,fill:"#f1e9d6"})}<path d="M176 441 l6 5 -2 4 7 4" stroke="#7d7466" stroke-width=".8" fill="none"/><rect x="181" y="430" width="6" height="5" rx="1" fill="url(#brassg)"/>`, [156,420,116,48]);
+  return svgWrap(s, "The workbench");
+}
+function sceneClocks(){
+  let s = BASE;
+  for(let i=0;i<3;i++){ const x=244+i*24, y=104+(i%2)*16; s += `<circle cx="${x}" cy="70" r="2" fill="#8e6e2e"/><line x1="${x}" y1="70" x2="${x}" y2="${y-9}" stroke="#8e6e2e"/>${face({cx:x,cy:y,r:8,ticks:false,hour:i*4+1,minute:i*20})}`; }
+  s += hot("grandfather", artGrandfather(), [60,20,150,390]);
+  s += hot("cuckoo", artCuckoo(), [290,46,200,330]);
+  s += hot("letterclock", artLetterClock(), [552,74,152,182]);
+  s += hot("repairs", artRepairs(), [516,262,262,106]);
+  return svgWrap(s, "The clock wall");
+}
+function sceneCabinets(){
+  let s = BASE;
+  s += hot("window", `<rect x="46" y="56" width="178" height="218" fill="#2c1c10"/><rect x="58" y="68" width="154" height="194" fill="#141c27"/>
+    <g clip-path="url(#winclip)"><path d="M58 228 q40 -18 80 -8 t74 -6 V262 H58Z" fill="#cfd5dc"/><path d="M70 228 l14 -42 l14 42z M146 222 l11 -32 l11 32z" fill="#0d131b"/><rect x="194" y="196" width="14" height="24" fill="#e9b85c"/><ellipse cx="201" cy="224" rx="22" ry="6" fill="#e9b85c" opacity=".35"/><rect class="snow" x="58" y="-60" width="154" height="330" fill="url(#snowpat)"/></g>
+    ${[84,110,136,162,188].map(x=>`<rect x="${x}" y="68" width="5" height="194" fill="#141414"/><rect x="${x}" y="68" width="1.5" height="194" fill="#555"/>`).join("")}<rect x="58" y="160" width="154" height="5" fill="#141414"/>
+    <rect x="40" y="272" width="190" height="10" fill="#5b3b23"/>`, [40,52,192,232]);
+  const r = rng(11), cols = ["#5a2a22","#2f4a3c","#3b3f5c","#6b4a2a","#7a6a4a","#4a2f3f","#2e3b33","#5c4a2e"];
+  let books = ""; let placed = false;
+  [128,214,300,386].forEach((by,si)=>{
+    let x = 262;
+    while(x < 410){
+      if(si===1 && !placed && x>=316){
+        books += `<rect x="${x}" y="${by-70}" width="17" height="70" fill="#2f6a4b"/><rect x="${x}" y="${by-62}" width="17" height="3" fill="#d6b25e"/><rect x="${x}" y="${by-12}" width="17" height="3" fill="#d6b25e"/><path d="M${x+9} ${by} v16" stroke="#c0473a" stroke-width="2.5"/>`;
+        x += 19; placed = true; continue;
+      }
+      const w = 8+Math.floor(r()*9), h = 46+Math.floor(r()*24);
+      if(x+w > 414) break;
+      const c = cols[Math.floor(r()*cols.length)];
+      books += `<rect x="${x}" y="${by-h}" width="${w}" height="${h}" fill="${c}"/><rect x="${x}" y="${by-h+6}" width="${w}" height="2" fill="#000" opacity=".25"/>`;
+      x += w + 1 + (r()<.12 ? 8 : 0);
+    }
+  });
+  s += hot("book", `<rect x="248" y="38" width="180" height="368" fill="#3a2414"/><rect x="258" y="48" width="160" height="350" fill="#1c120a"/>${books}${[128,214,300,386].map(y=>`<rect x="258" y="${y}" width="160" height="8" fill="#5b3b23"/>`).join("")}`, null);
+  const open = S.solved.cabinet;
+  s += hot("cabinet", open ? `<rect x="454" y="104" width="150" height="296" rx="3" fill="#2a332e"/><rect x="462" y="112" width="134" height="280" fill="#121614"/>
+      ${[180,250,320].map(y=>`<rect x="462" y="${y}" width="134" height="4" fill="#3a4540"/>`).join("")}
+      <rect x="472" y="150" width="18" height="30" rx="3" fill="#b9c4be"/><rect x="498" y="156" width="22" height="24" rx="3" fill="#a5b5ad"/><rect x="540" y="146" width="16" height="34" rx="3" fill="#c9d3cd"/>
+      <rect x="518" y="214" width="26" height="36" rx="3" fill="#dfe6e1"/><rect x="518" y="226" width="26" height="10" fill="#b23e2e"/><rect x="520" y="210" width="22" height="5" fill="#777"/><ellipse cx="562" cy="249" rx="13" ry="2.4" fill="#f4f4ef"/>
+      <rect x="476" y="292" width="40" height="28" rx="2" fill="#6b5a44"/><circle cx="572" cy="270" r="3" fill="#c8a14b"/>
+      <polygon points="454,104 424,118 424,388 454,400" fill="#46534c" stroke="#2a332e" stroke-width="2"/><polygon points="604,104 634,118 634,388 604,400" fill="#46534c" stroke="#2a332e" stroke-width="2"/>`
+    : `<rect x="454" y="104" width="150" height="296" rx="3" fill="#46534c" stroke="#2a332e" stroke-width="3"/><line x1="529" y1="108" x2="529" y2="396" stroke="#2a332e" stroke-width="2"/>
+      <rect x="466" y="186" width="54" height="196" rx="2" fill="none" stroke="#3a4540" stroke-width="3"/><rect x="538" y="186" width="54" height="196" rx="2" fill="none" stroke="#3a4540" stroke-width="3"/>
+      <rect x="472" y="124" width="114" height="44" fill="#b23e2e"/><text x="529" y="140" text-anchor="middle" font-family="${MONO}" font-size="10" fill="#f3e6d0" letter-spacing="1.5">GILDING SALTS</text><text x="529" y="160" text-anchor="middle" font-family="${MONO}" font-size="15" font-weight="700" fill="#f3e6d0" letter-spacing="3">POISON</text>
+      <rect x="500" y="244" width="58" height="22" rx="3" fill="url(#brassg)"/>${[0,1,2,3,4,5].map(i=>`<rect x="${504+i*9}" y="248" width="7" height="14" rx="1" fill="#3a2a10"/>`).join("")}`, [418,100,222,306]);
+  s += hot("notebook", `<rect x="644" y="142" width="104" height="84" fill="#e8dec4" transform="rotate(-3 696 184)"/><circle cx="694" cy="186" r="22" fill="none" stroke="#3a4a6a" stroke-width="1.4"/><path d="M672 156 l22 14 l22 -14 M676 160 l-4 12 M712 160 l4 12" stroke="#3a4a6a" stroke-width="1.4" fill="none"/><circle cx="696" cy="146" r="3" fill="#c0473a"/>
+    <rect x="620" y="300" width="170" height="16" fill="url(#woodg)"/><rect x="630" y="316" width="12" height="88" fill="#3a2515"/><rect x="768" y="316" width="12" height="88" fill="#3a2515"/>
+    <polygon points="650,298 658,282 700,282 700,298" fill="#efe6cf"/><polygon points="700,298 700,282 742,282 750,298" fill="#e4d9bf"/><path d="M664 288 h28 M662 292 h30 M706 288 h28 M706 292 h32" stroke="#7a8aa8" stroke-width="1"/>
+    <circle cx="766" cy="290" r="7" fill="none" stroke="#c8a14b" stroke-width="3"/><path d="M771 295 l8 4" stroke="#2c1c10" stroke-width="3"/>
+    <ellipse cx="700" cy="352" rx="30" ry="8" fill="#7a2f26"/><path d="M678 356 l-6 48 M722 356 l6 48 M700 360 v44" stroke="#3a2515" stroke-width="5"/>`, [612,130,184,276]);
+  return svgWrap(s, "The cabinets");
+}
+function sceneDoor(){
+  let s = BASE;
+  s += hot("sign", `<rect x="214" y="16" width="372" height="66" rx="3" fill="#1a120a" stroke="url(#brassg)" stroke-width="3"/><text x="400" y="45" text-anchor="middle" font-family="${SERIF}" font-size="25" fill="#d6b25e" letter-spacing="4">HARROW &amp; SON</text><text x="400" y="69" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="#c8a14b" letter-spacing="2">CLOCKMAKERS · EST. MDCCCXCVI</text>`, null);
+  s += hot("coat", `<rect x="98" y="96" width="150" height="10" fill="#5b3b23"/><path d="M168 106 v10 q0 8 -8 8" stroke="#c8a14b" stroke-width="4" fill="none"/>
+    <path d="M164 122 L126 148 L114 366 L216 366 L204 148 Z" fill="#6a5a44"/><path d="M164 124 L146 206 L164 246 L182 206 Z" fill="#544733"/>
+    <rect x="126" y="290" width="30" height="8" fill="#544733"/><rect x="176" y="290" width="30" height="8" fill="#544733"/>
+    <circle cx="164" cy="262" r="3" fill="#2b2620"/><circle cx="164" cy="290" r="3" fill="#2b2620"/><circle cx="164" cy="318" r="3" fill="#2b2620"/>
+    <rect x="182" y="172" width="16" height="11" fill="#efe6cf" transform="rotate(-12 190 178)"/><rect x="178" y="181" width="24" height="5" fill="#544733"/>`, [96,90,156,282]);
+  s += `<rect x="286" y="88" width="228" height="318" fill="#2c1c10"/>`;
+  s += hot("door", doorOpen() ? `<rect x="298" y="98" width="204" height="306" fill="url(#hallglow)"/><polygon points="298,98 348,112 348,392 298,404" fill="#5b3b23" stroke="#2c1c10" stroke-width="2"/><polygon points="298,404 502,404 570,480 240,480" fill="#f0c27a" opacity=".16"/>`
+    : `<rect x="298" y="98" width="204" height="306" fill="url(#woodg)"/>${[[318,118],[410,118],[318,262],[410,262]].map(([x,y])=>`<rect x="${x}" y="${y}" width="72" height="122" fill="none" stroke="#3a2515" stroke-width="5"/>`).join("")}
+      <rect x="436" y="210" width="54" height="70" rx="3" fill="url(#brassg)" stroke="#6b5222" stroke-width="1.5"/>${face({cx:463,cy:233,r:13,ticks:false,hour:12,minute:5})}<path d="M459 262 a4 4 0 1 1 8 0 l-2 9 h-4z" fill="#2b1d0a"/><circle cx="448" cy="306" r="6" fill="url(#brassg)"/>`, [286,88,228,318]);
+  s += `<path d="M318 410 h164 l16 30 h-196z" fill="#4a3a2a"/>`;
+  s += hot("register", `<path d="M502 214 h30" stroke="#8e6e2e" stroke-width="1.5"/><rect x="532" y="172" width="78" height="100" rx="4" fill="url(#woodg)" stroke="#2c1c10" stroke-width="2"/>${face({cx:571,cy:194,r:12,ticks:false,hour:11,minute:15})}
+    <rect x="544" y="214" width="54" height="42" fill="#15120d" stroke="#c8a14b" stroke-width="1.5"/><rect x="558" y="216" width="26" height="38" fill="#ece3cd"/><path d="M562 222 h18 M562 228 h18 M562 234 h18 M562 240 h14" stroke="#6b5a44" stroke-width="1"/>
+    <rect x="563" y="272" width="16" height="22" fill="#ece3cd"/><circle cx="602" cy="264" r="2" fill="#2b1d0a"/>`, [526,166,90,132]);
+  let holes = ""; for(let d=0; d<10; d++){ const [x,y]=pt(692,222,20,60-d*30); holes += `<circle cx="${f1(x)}" cy="${f1(y)}" r="4.2" fill="#d8d0c0"/>`; }
+  s += hot("phone", `<rect x="642" y="128" width="100" height="196" rx="6" fill="#3a2414"/><rect x="654" y="160" width="76" height="108" rx="12" fill="#161412"/>
+    <path d="M652 146 q40 -16 80 0" stroke="#161412" stroke-width="12" fill="none" stroke-linecap="round"/><circle cx="652" cy="148" r="9" fill="#161412"/><circle cx="732" cy="148" r="9" fill="#161412"/>
+    <circle cx="692" cy="222" r="30" fill="#24211e"/>${holes}<circle cx="692" cy="222" r="10" fill="#ece3cd"/>
+    <rect x="666" y="278" width="52" height="30" fill="#ece3cd"/><path d="M672 286 h40 M672 293 h34 M672 300 h38" stroke="#6b5a44" stroke-width="1"/>`, [636,120,112,210]);
+  return svgWrap(s, "The door wall");
+}
+const SCENES = [sceneBench, sceneClocks, sceneCabinets, sceneDoor];
+function wallOf(id){ return WALLS.find(w=>w.objs.includes(id)); }
+
+/* ---------------- Close-up views ---------------- */
+function lockUI(pre, opts){
+  const vals = lockVals[pre];
+  return `<div class="lock" id="lock-${pre}">${vals.map((v,i)=>`<label class="sr" for="${pre}${i}">Wheel ${i+1}</label><select class="wheel" id="${pre}${i}" data-pre="${pre}" data-i="${i}">${opts.map(o=>`<option${o===v?" selected":""}>${o}</option>`).join("")}</select>`).join("")}</div>`;
+}
+const DIGITS = "0123456789".split(""), LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+function gfDial(){ return `<svg class="art" viewBox="0 0 260 260" width="260" aria-label="The long-case clock's dial">${face({cx:130,cy:130,r:108,labels:ROMAN,lr:.75,ls:.13,hour:gfVals.h,minute:gfVals.m,text:[{t:"HARROW &amp; SON",dy:-.33,s:.085,ls:1.5},{t:"No. 415",dy:.36,s:.11,font:MONO}]})}</svg>`; }
+function photoHTML(){
+  return `<div class="photo"><svg viewBox="0 0 240 300" aria-label="Photograph of Edmund beside a tall clock"><rect width="240" height="300" fill="#efe6cf"/><rect x="12" y="12" width="216" height="240" fill="url(#sepia)"/>
+    <rect x="12" y="200" width="216" height="52" fill="#8d724c"/><path d="M128 40 L162 22 L196 40 V200 H128Z" fill="#5a4026"/><circle cx="162" cy="70" r="22" fill="#d9c49c"/><rect x="146" y="100" width="32" height="70" fill="#3e2c1a"/><circle cx="162" cy="182" r="9" fill="#b39a6a"/>
+    <circle cx="84" cy="82" r="16" fill="#3a2a1a"/><path d="M60 110 q24 -16 48 0 l6 92 h-60z" fill="#3a2a1a"/><path d="M106 118 l22 -14" stroke="#3a2a1a" stroke-width="9" stroke-linecap="round"/>
+    <text x="120" y="280" text-anchor="middle" font-family="${MONO}" font-size="11" fill="#6b5a44">HARROW &amp; SON · 1901</text></svg>
+    <div class="paper hand" style="margin:0;display:flex;align-items:center">Me and the old lady, the day I finished her. 1901.<br><br>She opens her case only when her hands show her own number.</div></div>`;
+}
+function escapementSVG(){
+  const cx=110, cy=140, R=58; let pts = [];
+  for(let i=0;i<15;i++){ const a=i*24; pts.push(pt(cx,cy,R*.8,a), pt(cx,cy,R,a+6), pt(cx,cy,R*.8,a+12)); }
+  const poly = pts.map(p=>f1(p[0])+","+f1(p[1])).join(" ");
+  return `<svg class="art" viewBox="0 0 300 220" width="300" aria-label="Pencil sketch of an escapement"><g stroke="#3a4a6a" stroke-width="1.6" fill="none" stroke-linecap="round">
+    <polygon points="${poly}"/><circle cx="${cx}" cy="${cy}" r="10"/><path d="M${cx} ${cy-10} V ${cy-R*.8}"/>
+    <path d="M110 30 L64 66 M110 30 L156 66 M64 66 l-6 22 M156 66 l6 22 M110 30 v-14"/><circle cx="110" cy="30" r="5"/>
+    <path d="M196 70 q20 -8 40 0" /><path d="M180 140 h40"/></g>
+    <text x="240" y="66" font-family="Caveat, cursive" font-size="17" fill="#3a4a6a">pallets (×2)</text><text x="226" y="146" font-family="Caveat, cursive" font-size="17" fill="#3a4a6a">escape wheel</text></svg>`;
+}
+function mossTranscript(){
+  return `<div class="transcript"><div class="who">Mrs. Edith Moss, Ashby Exchange</div>
+    <p>“Ashby Exchange, Mrs. Moss speaking. … Harrow House? Oh, poor Mr. Harrow. He mended Mother's clock, you know. Let me look at the board.</p>
+    <p>One call from the house tonight: the hall telephone to St. Luke's Hospital. Connected at 10:31, cleared at 10:52. Dr. Amesbury was speaking.</p>
+    <p>I'll confess I listened in, on and off. The doctor was talking every time I picked up, and that piano never stopped once. I could hardly hear him over it.</p>
+    <p>At about twenty to eleven he broke off and shouted, ‘Lang! Shut that terrace door, man, it's freezing!’ I heard a gentleman laugh, out in the cold, and then the door bang shut.”</p></div>`;
+}
+function tapeHTML(){
+  return `<p>The glass swings open. The tape reads:</p><div class="tape">HARROW DOOR REGISTER
+TUE 6 OCT 1936
+-----------------------
+ 7:02 PM  DOOR OPENED
+ 7:19 PM  DOOR OPENED
+ 7:30 PM  DOOR OPENED
+ 9:58 PM  DOOR OPENED
+10:38 PM  DOOR OPENED
+10:44 PM  DOOR OPENED
+10:55 PM  DOOR OPENED
+11:14 PM  DOOR OPENED</div><p class="muted">Every opening of the workshop door is stamped. There are no others tonight.</p>`;
+}
+const DIAL_LETTERS = {1:"",2:"ABC",3:"DEF",4:"GHI",5:"JKL",6:"MNO",7:"PRS",8:"TUV",9:"WXY",0:"OPER"};
+function dialHTML(){
+  const order = [1,2,3,4,5,6,7,8,9,0];
+  const holes = order.map((d,k)=>{ const a=(60-k*30)*Math.PI/180; const left=50+37*Math.sin(a), top=50-37*Math.cos(a);
+    return `<button class="h" data-act="dial" data-d="${d}" style="left:${f1(left)}%;top:${f1(top)}%" aria-label="Dial ${d}${DIAL_LETTERS[d]?" ("+DIAL_LETTERS[d].split("").join(" ")+")":""}"><b>${d}</b><small>${DIAL_LETTERS[d]}</small></button>`; }).join("");
+  return `<div class="dial">${holes}<div class="dial-center">ASHBY<br>EXCHANGE</div><div class="fstop"></div></div>`;
+}
+
+const VIEWS = {
+  note:()=>({title:"Note on the bench", html:`<div class="paper hand lined">Margaret,<br>You've forgotten the journal combination again. It's the year I opened the shop, and it's been painted over the door for forty years.<br><span style="float:right">E.</span><br></div>`}),
+  journal:()=> S.solved.journal
+    ? {title:"Edmund's journal", html:`<div class="paper hand journal">${JOURNAL.map(e=>`<p><span class="date">${e[0]}</span>${e[1]}</p>`).join("")}</div>`}
+    : {title:"Edmund's journal", html:`<p>A thick leather journal held shut by a brass strap and a four-digit combination lock.</p>${lockUI("j",DIGITS)}<div class="center"><button class="btn primary" data-act="try" data-p="journal">Try the lock</button></div><p class="msg" id="msg" role="status"></p>`},
+  teacup:()=>({title:"Teacup & kettle", html:`<p>Edmund's cup, half full and long cold. He brewed his own tea at night on the little spirit kettle beside it.</p><p>Lean close and there's a faint smell of bitter almonds.</p>`}),
+  cigar:()=>({title:"Ashtray", html:`<p>A Havana stub in the ashtray, cold as stone. Victor Lang smokes this brand. You saw the same band on the cigar case he was waving around the parlour.</p>`}),
+  mallet:()=>({title:"Brass mallet", html:`<p>A heavy brass mallet, the kind used to tap stubborn pins into place. It's spotless.</p><p>There isn't a mark on Edmund.</p>`}),
+  watch:()=>({title:"Pocket watch", html:`<svg class="art" viewBox="0 0 200 200" width="190" aria-label="Pocket watch stopped at 10:42">${face({cx:100,cy:106,r:76,labels:ROMAN,lr:.74,ls:.15,hour:10,minute:42,fill:"#f1e9d6"})}<path d="M60 70 l30 26 -10 16 34 24 -8 20" stroke="#7d7466" stroke-width="1.4" fill="none"/><rect x="92" y="8" width="16" height="14" rx="3" fill="url(#brassg)"/></svg><p>Edmund's pocket watch, on the floor beside the toppled stool. The crystal cracked when it hit the boards, and the hands have stopped at <b>10:42</b>.</p>`}),
+  grandfather:()=> S.solved.grandfather
+    ? {title:"Long-case clock", html:`${gfDial()}<p>The case door stands open and the pendulum swings on. The iron key that hung behind it is in your pocket.</p>`}
+    : {title:"Long-case clock", html:`<p>Edmund's long-case clock, the one he called the old lady. Her case door is locked. A winding knob on her side lets you set her hands.</p><div id="gfdial">${gfDial()}</div>
+      <div class="setrow"><label for="gh">Hour<select class="wheel" id="gh">${ARABIC.map(h=>`<option value="${h}"${+h===gfVals.h?" selected":""}>${h}</option>`).join("")}</select></label>
+      <label for="gm">Minute<select class="wheel" id="gm" style="width:70px">${Array.from({length:12},(_,i)=>i*5).map(m=>`<option value="${m}"${m===gfVals.m?" selected":""}>${String(m).padStart(2,"0")}</option>`).join("")}</select></label></div>
+      <div class="center"><button class="btn primary" data-act="set-gf">Set the hands</button></div><p class="msg" id="msg" role="status"></p>`},
+  cuckoo:()=> S.solved.cuckoo
+    ? {title:"Cuckoo clock", html:`<p>The little door hangs open. There was no bird inside, only this photograph.</p>${photoHTML()}`}
+    : {title:"Cuckoo clock", html:`<svg class="art" viewBox="290 44 200 330" width="220" aria-label="The cuckoo clock">${artCuckoo()}</svg><p>A Black Forest cuckoo clock, older than anyone in the house. Its three chains end in carved figures instead of pine cones. The little door at the top is shut tight.</p>
+      <div class="figs">${["woodcutter","lamplighter","baker"].map(f=>`<button class="fig" data-act="pull" data-fig="${f}"><svg viewBox="0 -8 46 68" aria-hidden="true">${figure(f)}</svg><span>Pull the ${FIG[f]}</span></button>`).join("")}</div>
+      <p class="seq" id="seq">${cuckooSeq.length?cuckooSeq.map(f=>FIG[f]).join(" → "):"No chains pulled yet."}</p><p class="msg" id="msg" role="status"></p>`},
+  letterclock:()=>({title:"Letter clock", html:`<svg class="art" viewBox="0 0 260 290" width="270" aria-label="The letter clock dial">${face({cx:130,cy:130,r:110,labels:LETTER_DIAL,lr:.77,ls:.2,inner:ARABIC,ir:.5,is:.09,hour:10,minute:10})}<rect x="70" y="262" width="120" height="22" rx="2" fill="url(#brassg)"/><text x="130" y="277" text-anchor="middle" font-family="${MONO}" font-size="10" fill="#3a2a10" letter-spacing="1">SHORT, THEN LONG</text></svg>
+    <p>Edmund's cipher clock, built for games with his apprentice. Twelve letters stand where the hours should be, with tiny numerals inside them. The brass plate reads <b>SHORT, THEN LONG</b>.</p>`}),
+  repairs:()=>({title:"Repair shelf", html:`<p>Three clocks waiting for repair, each with a paper ticket tied on with string.</p><div class="paper typed">Mrs. Calloway. Mantel clock, chime sticks.<br>Rev. Tolley. Carriage clock, new mainspring.<br>Dr. Amesbury. Gold half-hunter. On account. <b>UNPAID.</b></div>`}),
+  window:()=>({title:"Barred window", html:`<p>Iron bars, set deep in the stone. No way out here.</p><p>Snow is drifting across the dark garden. At the far end of the house, light spills from the terrace door.</p>`}),
+  book:()=>({title:"Bookshelf", html:`<p>Trade manuals, catalogues and bound copies of the <i>Horological Journal</i>. One green volume sticks out, with a red ribbon marking a page: <i>Practical Gilding &amp; Electroplating</i> (1922), page 41.</p><div class="paper typed">Potassium cyanide, the gilder's chief salt, is a deadly poison. A small quantity dissolved in a drink will kill within minutes. Its vapour carries a faint odour of bitter almonds, which not every nose can detect.</div>`}),
+  cabinet:()=> S.solved.cabinet
+    ? {title:"Gilding cabinet", html:`<p>Inside are the gilding chemicals. The jar marked <b>POTASSIUM CYANIDE</b> has a broken seal, and fresh white powder is spilled on the shelf. Someone took some tonight, then locked the cabinet behind them.</p><p>${S.items.registerKey?"The hook inside the door is empty now. You took the register key.":"On a hook inside the door hangs a small brass key."}</p>`}
+    : {title:"Gilding cabinet", html:`<p>A steel cabinet with a red label: <b>GILDING SALTS · POISON</b>. It's held shut by a lettered lock with six wheels.</p>${lockUI("c",LETTERS)}<div class="center"><button class="btn primary" data-act="try" data-p="cabinet">Try the lock</button></div><p class="msg" id="msg" role="status"></p>`},
+  notebook:()=>({title:"Apprentice's bench", html:`<p>Clara's bench, tidy as a surgeon's tray. Her notebook lies open beside a loupe.</p>
+    <p class="page-label">Pinned above the bench</p><div class="paper">${escapementSVG()}<div class="hand" style="text-align:center">Double-pallet escapement, first drawing.<br>C. Doyle, 12 May 1936</div></div>
+    <p class="page-label">Notebook, page 31</p><div class="paper hand lined">Cabinet word (new). Don't forget it again!<div class="cipher">12:10 · 6:30 · 4:40</div></div>
+    <p class="page-label">Notebook, page 34</p><div class="paper hand lined">Asked Mr. H. about the patent. “Still with the solicitors.” Fourth time he's said that.</div>`}),
+  sign:()=>({title:"Shop sign", html:`<svg class="art" viewBox="210 12 380 74" width="560" style="width:100%" aria-label="Sign reading Harrow and Son, Clockmakers, established MDCCCXCVI"><rect x="214" y="16" width="372" height="66" rx="3" fill="#1a120a" stroke="url(#brassg)" stroke-width="3"/><text x="400" y="45" text-anchor="middle" font-family="${SERIF}" font-size="25" fill="#d6b25e" letter-spacing="4">HARROW &amp; SON</text><text x="400" y="69" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="#c8a14b" letter-spacing="2">CLOCKMAKERS · EST. MDCCCXCVI</text></svg><p>Gold letters on black, painted above the door. There never was a son. Edmund just liked the sound of it.</p>`}),
+  door:()=> doorOpen()
+    ? {title:"Workshop door", html:`<p>The door stands open. The hall is dark and quiet, and voices drift from the parlour.</p><div class="row"><button class="btn primary" data-act="parlour">Go to the parlour and name the killer</button></div><p class="muted" style="margin-top:12px">You can keep searching the workshop first. The clock is still running.</p>`}
+    : {title:"Workshop door", html:`<p>Solid oak. Edmund's time lock is bolted, and the dial on its brass case has been turned to 12:05, five minutes after the last train. Below the dial is a keyhole for an override key.</p>${S.items.doorKey?`<div class="row"><button class="btn primary" data-act="use" data-p="door">Use the iron key</button></div>`:`<p class="muted">The bolt won't budge.</p>`}`},
+  register:()=> S.solved.register
+    ? {title:"Door register", html:tapeHTML()}
+    : {title:"Door register", html:`<p>Edmund's door register. A wire runs to it from the door frame, and every time the workshop door opens it stamps the time on a paper tape. The tape sits behind a glass panel with a tiny keyhole.</p>${S.items.registerKey?`<div class="row"><button class="btn primary" data-act="use" data-p="register">Use the register key</button></div>`:`<p class="muted">You need a small key.</p>`}`},
+  phone:()=>({title:"Telephone", html:`<p>A wall telephone on the house line. A card is tucked under the dial.</p><div class="card">ASHBY EXCHANGE<br>Dial 0 for the Operator.<br>After hours, for call records, dial the Night Supervisor's surname.</div>
+    ${dialHTML()}<div class="dialled" id="dialled" aria-live="polite">${dialBuf||"&nbsp;"}</div><div class="center"><button class="btn" data-act="hangup">Hang up</button></div>
+    <div id="line">${S.solved.phone?mossTranscript():""}</div>`}),
+  coat:()=>({title:"Edmund's coat", html:`<p>Edmund's tweed coat hangs on the peg. Something is folded in the breast pocket.</p><div class="paper hand">Dear Mr. Harrow,<br>Thank you for mending Mother's carriage clock. It hasn't kept such good time since 1910!<br>With gratitude,<br>Mrs. Edith Moss<br><span style="font-size:1.1rem">Night Supervisor, Ashby Telephone Exchange</span></div>`}),
+};
+
+/* ---------------- Rendering ---------------- */
+function render(){
+  const app = $("#app"); const sc = screen(); lastScreen = sc;
+  if(sc!=="play" && sc!=="accuse"){ hideSheet(); const t = $("#toast"); if(t) t.classList.remove("on"); }
+  if(sc==="intro"){ app.className = "app"; app.innerHTML = introHTML(); renderLobby(); return; }
+  if(sc==="won" || sc==="lost"){ app.className = "app"; app.innerHTML = endHTML(); fillEndNames(); return; }
+  app.className = "app has-notes";
+  app.innerHTML = hudHTML() + `<main class="stage" id="stage"></main><aside class="notes" id="notes" aria-label="Notebook"></aside>`;
+  renderStage(); renderNotes(); renderTeam(); updateTimerDOM(); syncPauseSheet();
+}
+function hudHTML(){
+  return `<header class="hud"><div class="t"><span class="tl" id="tlabel">Last train in</span><span class="timer" id="timer">45:00</span></div>
+    <div class="t"><span class="tl">Ashby time</span><span class="gclock" id="gclock">11:15 PM</span></div>
+    <button class="team" id="team" data-act="team" aria-label="Your team"></button>
+    <div class="acts"><button class="chip-btn" data-act="hint">Hint</button><button class="chip-btn notes-btn" data-act="notes">Notes</button>${S.untimed?"":`<button class="chip-btn" data-act="pause">Pause</button>`}<button class="chip-btn" data-act="menu">Menu</button></div></header>`;
+}
+const CHEV_L = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CHEV_R = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function renderStage(){
+  const st = $("#stage"); if(!st) return;
+  if(S.phase==="accuse"){ st.innerHTML = accuseHTML(); return; }
+  const w = WALLS[S.wall];
+  st.innerHTML = `<div class="wallbar"><button class="navbtn" data-act="prev" aria-label="Turn to the previous wall">${CHEV_L}</button>
+    <div><h2>${w.name}</h2><span class="pos">WALL ${S.wall+1} OF 4</span></div>
+    <button class="navbtn" data-act="next" aria-label="Turn to the next wall">${CHEV_R}</button>
+    <nav class="wall-tabs" aria-label="Walls">${WALLS.map((x,i)=>`<button data-act="wall" data-w="${i}" aria-current="${i===S.wall}">${x.name}<span class="wb" data-wb="${i}"></span></button>`).join("")}</nav></div>
+    <div class="scene">${SCENES[S.wall]()}</div><div class="objs" id="objs"></div>
+    <p class="here" id="here" aria-live="polite"></p>
+    <p class="tip">Tap anything in the room to examine it.${doorOpen()?" The door is open. Go through it when you're ready to accuse.":""}</p>`;
+  renderObjs(); renderTeam();
+}
+function objStatus(id){
+  const map = {journal:"journal", cabinet:"cabinet", register:"register", phone:"phone", cuckoo:"cuckoo", grandfather:"grandfather"};
+  if(id==="door" && doorOpen()) return "open";
+  if(map[id] && S.solved[map[id]]) return "solved";
+  return "";
+}
+function renderObjs(){
+  const el = $("#objs"); if(!el) return;
+  el.innerHTML = WALLS[S.wall].objs.map(id=>{ const st = objStatus(id);
+    return `<button class="obj${S.seen[id]?" seen":""}" data-hot="${id}"><span class="dot" aria-hidden="true"></span>${OBJ[id]}${st?`<span class="st">${st}</span>`:""}</button>`; }).join("");
+}
+function avatarHTML(pid, label){
+  const h = [...String(pid||"x")].reduce((a,c)=>((a*31 + c.charCodeAt(0))>>>0), 7) % 360;
+  return `<span class="av" style="background:hsl(${h} 32% 28%);color:hsl(${h} 70% 84%)" aria-hidden="true">${esc(((label||"?").trim()[0]||"?").toUpperCase())}</span>`;
+}
+function peerName(p){ return (p && p.n) || "Detective"; }
+function peerAvatar(p){ return null; }
+function article(label){ return /^(Edmund's|Apprentice's)/.test(label) ? label : "the " + label.charAt(0).toLowerCase() + label.slice(1); }
+function whereText(at){
+  if(!at || typeof at!=="object") return "Looking around";
+  if(at.p==="parlour") return "In the parlour, ready to accuse";
+  if(typeof at.o==="string" && OBJ[at.o]) return "Looking at " + article(OBJ[at.o]);
+  const w = WALLS[at.w]; return w ? "At the " + w.name.toLowerCase() : "Looking around";
+}
+function renderTeam(){
+  const el = $("#team"), here = $("#here");
+  const mates = teammates();
+  if(el){
+    const avs = [avatarHTML(myId, me.name||"You")].concat(mates.slice(0,3).map(p=>avatarHTML(p.pid, peerName(p))));
+    const st = netStatus();
+    const sub = st==="connecting" ? "Connecting…" : st==="offline" ? "Offline · this device only" : mates.length ? `${mates.length+1} detectives` : "Just you so far";
+    el.innerHTML = `<span class="avs">${avs.join("")}</span><span class="tm"><b>GAME ${esc(S.game||"")}</b><small>${sub}</small></span>`;
+  }
+  if(here){
+    const there = mates.filter(p=>p.at && p.at.p!=="parlour" && p.at.w===S.wall);
+    here.textContent = there.length ? "Also at this wall: " + there.map(p=>peerName(p)).join(", ") : "";
+  }
+  document.querySelectorAll("[data-wb]").forEach(b=>{
+    const i = +b.dataset.wb; const n = mates.filter(p=>p.at && p.at.p!=="parlour" && p.at.w===i).length;
+    b.textContent = n ? String(n) : "";
+  });
+}
+function renderNotes(){
+  const el = $("#notes"); if(!el) return;
+  const tab = S.nbTab, evs = evList();
+  const nItems = Object.keys(S.items).filter(k=>S.items[k] && ITEMS[k]).length;
+  const tabs = [["suspects","Suspects"],["evidence",`Evidence (${evs.length})`],["timeline","Timeline"],["items",`Items (${nItems})`]];
+  let body = "";
+  if(tab==="suspects"){
+    body = `<p class="case">Edmund Harrow, 60, clockmaker. Found dead at his bench at 10:55 PM. No marks on him. Statements taken at 11:05 PM:</p>` +
+      SUSPECTS.map(s=>{ const notes = SUSPECT_NOTES[s.id].filter(n=>S.ev[n[0]]!=null);
+        return `<div class="suspect"><div class="mono" aria-hidden="true">${s.ini}</div><div><h4>${s.name}</h4><div class="role">${s.role}</div><p class="quote">“${s.said}”</p>${notes.length?`<ul class="snotes">${notes.map(n=>`<li>${n[1]}</li>`).join("")}</ul>`:""}</div></div>`; }).join("");
+  } else if(tab==="evidence"){
+    body = evs.length ? `<div class="evlist">${evs.map((id,i)=>`<div class="evcard"><div class="tag">Exhibit ${String.fromCharCode(65+i)}</div><h4>${EV[id].title}</h4><p>${EV[id].text}</p></div>`).join("")}</div>`
+      : `<p class="empty">Nothing yet. Examine things in the workshop and the evidence will collect here for the whole team.</p>`;
+  } else if(tab==="timeline"){
+    const rows = TL.filter(r=>r[2]===null || S.ev[r[2]]!=null).sort((a,b)=>a[0]-b[0]);
+    body = `<ul class="tline">${rows.map(r=>`<li class="${r[2]==="tape"?"door":""}"><time>${r[1]}</time><div>${r[3]}<span class="by">${r[4]}</span></div></li>`).join("")}</ul>${S.ev.tape!=null?"":`<p class="empty" style="margin-top:10px">More times will appear as you find evidence.</p>`}`;
+  } else {
+    body = nItems ? `<div class="items">${Object.keys(ITEMS).filter(k=>S.items[k]).map(k=>`<div class="item"><div><b>${ITEMS[k].title}</b><span>${ITEMS[k].text}</span></div></div>`).join("")}</div><p class="empty" style="margin-top:10px">Keys are shared: anyone on the team can use them.</p>`
+      : `<p class="empty">The team's pockets are empty.</p>`;
+  }
+  el.innerHTML = `<h3>Notebook</h3><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-tab="${k}" aria-selected="${k===tab}">${l}</button>`).join("")}</div><div role="tabpanel">${body}</div>`;
+}
+function radios(name, opts){
+  return `<div class="opts">${opts.map(([v,l])=>`<label class="opt"><input type="radio" name="${name}" value="${v}"${accVals[name]===v?" checked":""}><span>${l}</span></label>`).join("")}</div>`;
+}
+function accuseHTML(){
+  return `<section class="parlour"><p class="eyebrow">The parlour · 4 suspects</p><h2>Name the killer</h2>
+    <p class="lede-s">Constable Pike has just come in from the snow, stamping his boots. Margaret, Dr. Amesbury, Victor Lang and Clara Doyle look up as you walk in. Everyone is waiting.</p>
+    <form id="accuse" novalidate>
+      <fieldset><legend>Who killed Edmund Harrow?</legend>${radios("who", SUSPECTS.map(s=>[s.id,s.name]))}</fieldset>
+      <fieldset><legend>How?</legend>${radios("how", HOW)}</fieldset>
+      <fieldset><legend>Why?</legend>${radios("why", WHY)}</fieldset>
+      <p class="msg bad" id="amsg" role="status" style="text-align:left"></p>
+      <div class="row"><button class="btn primary" type="submit">Make the accusation</button><button class="btn" type="button" data-act="back-room">Back to the workshop</button></div>
+      <p class="muted" style="margin-top:12px">${S.untimed?"No penalty now. The train has gone.":"Talk it over with your team first. A wrong accusation costs everyone 3 minutes."}</p>
+    </form></section>`;
+}
+function introClock(){
+  return `<svg viewBox="0 0 300 300" class="iclock" aria-hidden="true">${face({cx:150,cy:150,r:120,labels:ROMAN,lr:.76,ls:.13,hour:11,minute:14,text:[{t:"HARROW &amp; SON",dy:-.34,s:.075,ls:2},{t:"ASHBY",dy:.36,s:.065,ls:4}]})}<g class="sechand"><line x1="150" y1="172" x2="150" y2="46" stroke="#b23e2e" stroke-width="2"/><circle cx="150" cy="150" r="4" fill="#b23e2e"/></g></svg>`;
+}
+function introHTML(){
+  return `<section class="screen"><div class="intro-grid"><div>
+      <p class="eyebrow">Ashby · Tuesday 6 October 1936 · 11:14 PM</p>
+      <h1>The Clockmaker's Last Hour</h1>${inviteCode()?`<div class="invited-first">${lobbyHTML()}</div>`:""}
+      <div class="lede"><p>Edmund Harrow, master clockmaker of Ashby, was found dead at his workbench at five to eleven tonight. It was his sixtieth birthday. There isn't a mark on him.</p>
+      <p>You took statements from the four people still in the house, had Edmund carried to the parlour sofa, and stepped into his workshop to examine the scene. Behind you, the oak door swung shut and the bolt of his time lock slid home. Someone threw it from the hall.</p>
+      <p>The workshop has one door and a barred window. The last train out of Ashby leaves at midnight, and the killer means to be on it.</p></div></div>
+      <div class="iclock-wrap">${introClock()}</div></div>
+    <div class="goal"><b>Your goal:</b> escape the workshop, then name the killer, how they did it, and why. You have 45 minutes.</div>
+    ${inviteCode()?"":`<h3 class="sub">Play together</h3>${lobbyHTML()}`}
+    <h3 class="sub">In the house tonight</h3>
+    <div class="cast">${SUSPECTS.map(s=>`<div><span class="mono" aria-hidden="true">${s.ini}</span><div><b>${s.name}</b><span>${s.role}</span></div></div>`).join("")}</div>
+    <h3 class="sub">How to play</h3>
+    <ul class="howto">${HOWTO.map(x=>`<li>${x}</li>`).join("")}</ul></section>`;
+}
+const HOWTO = [
+  "Everyone opens this page on their own phone or computer. One person starts a game and shares the 4-letter code or invite link, and everyone else joins with it.",
+  "The clock, clues, keys, evidence and hints are shared, and you can see where your teammates are looking. Split up: one person can work the telephone while another reads the journal.",
+  "Tap anything in the room to examine it. Use the arrows to turn to each of the four walls. Every code, key and clue is somewhere in the room.",
+  "Stuck? Each hint costs the team one minute. A wrong accusation costs three.",
+];
+function gameStatus(){ return ""; }
+function updateLobbyTimes(){}
+function inviteCode(){ const m = (location.hash||"").match(/^#([A-Za-z]{4})$/); return m ? m[1].toUpperCase() : ""; }
+function clearHash(){ try{ if(location.hash) history.replaceState(null, "", location.pathname + location.search); }catch(e){} }
+function lobbyHTML(){
+  const inv = inviteCode();
+  return `<div class="lobby">
+    ${inv?`<p class="invite">You've been invited to game <b>${esc(inv)}</b>. Type your name, then tap Join.</p>`:""}
+    <label class="fl" for="pname">Your name</label>
+    <input id="pname" class="tin" maxlength="20" autocomplete="nickname" placeholder="So your team knows who's who" value="${esc(me.name)}">
+    <div class="lobby-grid">
+      <div class="lcard"><h4>Start a new game</h4><p>You'll get a 4-letter code to share with your team.</p><button class="btn ${inv?"":"primary "}big" data-act="new">Start a new game</button></div>
+      <div class="lcard"><h4>Join a game</h4><p>Type the code from whoever started it.</p><div class="row"><input id="jcode" class="tin code-in" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CODE" value="${esc(inv)}" aria-label="Game code"><button class="btn ${inv?"primary ":""}big" data-act="join">Join</button></div></div>
+    </div>
+    <p class="msg" id="lmsg" role="status" style="text-align:left"></p>
+    <p class="netline" id="netline"></p></div>`;
+}
+function renderLobby(){
+  const el = $("#netline"); if(!el) return;
+  const st = netStatus();
+  el.innerHTML = st==="online" ? `<span class="sdot ok"></span>Connected. Friends on any phone or computer can join.`
+    : st==="connecting" ? `<span class="sdot"></span>Connecting to the game servers…`
+    : `<span class="sdot bad"></span>Can't reach the game servers right now. You can still start a game and play on this device.`;
+}
+function rank(){
+  if(S.untimed || !S.wn || S.wn.r==null) return "Village constable";
+  const m = S.wn.r/60000;
+  if(m>=15 && hintCount()<=2 && S.wrongs.length===0) return "Chief inspector";
+  if(m>=8) return "Detective inspector";
+  if(m>=3) return "Detective sergeant";
+  return "Police constable";
+}
+function endHTML(){
+  if(screen()==="won"){
+    const r = S.wn.r;
+    const tl = r==null ? "None" : fmt(r);
+    const at = r==null ? "After midnight" : clock12(23*60+15+Math.floor((TOTAL-r)/60000));
+    return `<section class="screen"><p class="eyebrow">Case closed · ${at}</p><h1>Clara Doyle</h1>
+      <p class="muted" id="wonby"></p>
+      <p class="confession">${CONFESSION}</p>
+      <div class="stats"><div class="stat"><span>Time to spare</span><b>${tl}</b></div><div class="stat"><span>Hints used</span><b>${hintCount()}</b></div><div class="stat"><span>Wrong accusations</span><b>${S.wrongs.length}</b></div><div class="stat"><span>Team rank</span><b style="font-size:1.1rem;font-family:var(--f-body)">${rank()}</b></div></div>
+      <h3 class="sub">How it fits together</h3><ol class="solution">${SOLUTION.map(x=>`<li>${x}</li>`).join("")}</ol>
+      <div class="row"><button class="btn primary" data-act="leave">Back to the lobby</button></div></section>`;
+  }
+  return `<section class="screen"><p class="eyebrow">12:00 AM · Ashby station</p><h1>The train has gone</h1>
+    <div class="lede"><p>Out across the snow, the London train pulls away from Ashby station. One of the four people you questioned tonight is on it.</p></div>
+    <div class="row" style="margin:18px 0 24px"><button class="btn primary" data-act="untimed">Keep investigating without the clock</button><button class="btn" data-act="reveal-solution">Show me the answer</button><button class="btn" data-act="leave">Back to the lobby</button></div>
+    <p class="muted">Keeping on without the clock does it for the whole team. The answer only shows on this screen.</p>
+    ${S.showSolution?`<h3 class="sub">The killer was Clara Doyle</h3><p class="confession">${CONFESSION}</p><h3 class="sub">How it fits together</h3><ol class="solution">${SOLUTION.map(x=>`<li>${x}</li>`).join("")}</ol>`:""}</section>`;
+}
+async function fillEndNames(){
+  const el = $("#wonby"); if(!el || !S.wn) return;
+  const who = await nameOf(S.wn.u);
+  if($("#wonby")) $("#wonby").textContent = who==="You" ? "You named the killer." : who==="A teammate" ? "Your team named the killer." : `${who} named the killer.`;
+}
+
+/* ---------------- Sheets ---------------- */
+function openSheet(html, kind){
+  const ov = $("#ov");
+  if(ov.hidden) lastFocus = document.activeElement;
+  ov.dataset.kind = kind||"";
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">${html}</div>`;
+  ov.hidden = false; document.body.classList.add("noscroll");
+  ov.querySelector(".sheet").focus({preventScroll:true});
+}
+function hideSheet(){
+  const ov = $("#ov"); if(ov.hidden) return;
+  const had = curView;
+  ov.hidden = true; ov.innerHTML = ""; ov.dataset.kind = ""; curView = null; document.body.classList.remove("noscroll");
+  if(lastFocus && document.contains(lastFocus)) try{ lastFocus.focus({preventScroll:true}); }catch(e){}
+  if(had) publish();
+}
+function closeSheet(){ if($("#ov").dataset.kind==="pause") return; hideSheet(); }
+function head(eyebrow, title, noX){ return `<div class="sheet-head"><div><p class="eyebrow">${eyebrow}</p><h2 id="sheet-title">${title}</h2></div>${noX?"":`<button class="x" data-act="close" aria-label="Close">×</button>`}</div>`; }
+function openView(id){
+  if(screen()!=="play" || !VIEWS[id]) return;
+  if(paused()){ syncPauseSheet(); return; }
+  curView = id; S.seen[id] = true;
+  if(id!=="phone") dialBuf = "";
+  const v = VIEWS[id]();
+  openSheet(head(wallOf(id).name, v.title) + `<div class="sheet-body" id="vbody">${v.html}</div>`, "view");
+  if(EXAMINE_EV[id]) addEvidence(EXAMINE_EV[id]);
+  commit(); renderObjs();
+}
+function refreshView(){ if(!curView) return; const b = $("#vbody"); if(b) b.innerHTML = VIEWS[curView]().html; }
+function syncPauseSheet(){
+  const ov = $("#ov"); const open = !ov.hidden && ov.dataset.kind==="pause"; const sc = screen();
+  if(paused() && (sc==="play" || sc==="accuse")){
+    const many = teammates().length;
+    const body = `<p>${welcome ? "The clock stopped while everyone was away. Your investigation is saved right where you left it." : "Nobody touch anything."} The train leaves in <b>${fmt(remaining())}</b>.</p><p class="muted" id="pauseby"></p><div class="row"><button class="btn primary" data-act="resume">Resume the clock${many?" for everyone":""}</button></div>`;
+    if(!open) openSheet(head(welcome?"Welcome back":"Paused", welcome?"Ready to carry on?":"The clock has stopped", true) + `<div class="sheet-body" id="pausebody">${body}</div>`, "pause");
+    else { const b = $("#pausebody"); if(b) b.innerHTML = body; }
+    if(!welcome && S.pz.u) Promise.resolve(nameOf(S.pz.u)).then(n=>{ const el = $("#pauseby"); if(el) el.textContent = n==="You" ? "You paused the clock." : `${n} paused the clock.`; });
+  } else if(open) hideSheet();
+}
+function openHints(){
+  const goals = GOALS.filter(g=>g.show() && !g.done());
+  const cost = S.untimed ? "" : " (−1:00 for the team)";
+  const body = goals.length ? goals.map(g=>{ const n = S.hints[g.id]||0;
+    return `<div class="goalcard"><h4>${g.title}</h4>${n?`<ol>${g.hints.slice(0,n).map(h=>`<li>${h}</li>`).join("")}</ol>`:""}${n<g.hints.length?`<button class="btn" data-act="reveal" data-g="${g.id}">${n?"Another hint":"Reveal a hint"}${cost}</button>`:`<p class="muted" style="margin:0">That's every hint for this one.</p>`}</div>`; }).join("")
+    : `<p>Nothing to hint at yet. Look around: tap things on each of the four walls, and puzzles your team finds will appear here.</p>`;
+  openSheet(head("Hints", "Where are you stuck?") + `<div class="sheet-body"><p class="muted">Only puzzles your team has found are listed. Hints are shared with everyone. ${S.untimed?"They're free now.":"Each one costs the team a minute."}</p>${body}</div>`, "hint");
+}
+function openMenu(confirming){
+  const multi = teammates().length;
+  openSheet(head("Menu", "The Clockmaker's Last Hour") + `<div class="sheet-body"><div class="menu-list">
+    <button class="btn" data-act="team">Your team</button>
+    <button class="btn" data-act="sound" aria-pressed="${S.sound}">Ticking sound: ${S.sound?"on":"off"}</button>
+    <button class="btn" data-act="howto">How to play</button>
+    ${confirming?`<div class="goalcard"><h4>Leave game ${esc(S.game||"")}?</h4><p style="margin:0 0 10px">${multi?"Your teammates keep playing. You can rejoin from the lobby while they're still in the game.":"Nobody else is in this game, so its progress will be lost."}</p><div class="row"><button class="btn primary" data-act="leave">Yes, leave</button><button class="btn" data-act="leave-no">Keep playing</button></div></div>`:`<button class="btn" data-act="leave-ask">Leave this game</button>`}
+    </div></div>`, "menu");
+}
+function openHowTo(){
+  openSheet(head("How to play","Escape, then accuse") + `<div class="sheet-body"><ul class="howto">${HOWTO.map(x=>`<li>${x}</li>`).join("")}<li>Keys are used automatically when you examine the right lock. Once the door is open, go to the parlour and name the killer, how, and why.</li></ul></div>`, "menu");
+}
+function inviteLink(){ return location.origin + location.pathname + "#" + (S.game||""); }
+function openTeam(){
+  const mates = teammates(), known = knownTeam();
+  const off = known.filter(p=>!mates.includes(p));
+  const mine = `<div>${avatarHTML(myId, me.name||"You")}<div><b>You${me.name?" ("+esc(me.name)+")":""}</b><span>${whereText({w:S.wall, o:"", p:S.phase==="accuse"?"parlour":"room"})}</span></div></div>`;
+  const rows = mates.map(p=>`<div>${avatarHTML(p.pid, peerName(p))}<div><b>${esc(peerName(p))}</b><span>${esc(whereText(p.at))}</span></div></div>`).join("");
+  const offRows = off.map(p=>`<div class="off">${avatarHTML(p.pid, peerName(p))}<div><b>${esc(peerName(p))}</b><span>Not here right now</span></div></div>`).join("");
+  const invite = netStatus()==="offline"
+    ? `<p class="muted">You're offline, so this game is on this device only for now. When the connection comes back, your team can join with code ${esc(S.game)}.</p>`
+    : `<div class="invitebox"><span class="lobby-h">Game code</span><div class="bigcode">${esc(S.game)}</div><p class="muted">Friends open this page and type the code, or tap your invite link:</p><input class="tin linkbox" id="invlink" readonly value="${esc(inviteLink())}" aria-label="Invite link"><div class="row">${navigator.share?`<button class="btn primary" data-act="share">Share invite</button>`:""}<button class="btn${navigator.share?"":" primary"}" data-act="copy">Copy link</button></div><p class="msg" id="cmsg" role="status" style="text-align:left"></p></div>`;
+  openSheet(head("Your team", `Game ${esc(S.game||"")}`) + `<div class="sheet-body">${invite}<div class="roster">${mine}${rows}${offRows}</div><p class="muted">Everyone in the game shares the clock, clues, keys and hints.</p></div>`, "team");
+}
+/* ---------------- Game actions ---------------- */
+let toastT;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("on"), 3000); }
+function addEvidence(id){
+  if(S.ev[id]!=null) return;
+  S.ev[id] = Math.max(0, Math.round((Date.now() - (S.t0||Date.now()))/1000));
+  commit(); renderNotes();
+  toast("Added to the notebook: " + EV[id].title);
+}
+function giveItem(id){ S.items[id] = 1; commit(); renderNotes(); }
+function setMsg(text, cls){ const m = $("#msg"); if(m){ m.textContent = text; m.className = "msg " + (cls||""); } }
+function shake(sel){ const el = $(sel); if(!el) return; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+function solve(p){
+  if(S.solved[p]) { refreshView(); return; }
+  S.solved[p] = myId || 1;
+  if(p==="journal"){ addEvidence("journal"); toast("The lock springs open. Edmund's journal is in the notebook."); }
+  if(p==="cabinet"){ addEvidence("cabinet"); giveItem("registerKey"); toast("Cabinet open. You took the register key."); }
+  if(p==="register"){ addEvidence("tape"); }
+  if(p==="phone"){ addEvidence("call"); }
+  if(p==="cuckoo"){ giveItem("photo"); addEvidence("photo"); }
+  if(p==="grandfather"){ giveItem("doorKey"); toast("You took the iron door key."); }
+  if(p==="door"){ toast("The door is open."); }
+  unlockSound(); commit(); refreshView(); renderStage(); renderNotes();
+}
+function tryLock(p){
+  const pre = p==="journal" ? "j" : "c";
+  const val = lockVals[pre].join("");
+  const ans = p==="journal" ? "1896" : "PALLET";
+  if(val===ans) solve(p);
+  else { wrongSound(); shake("#lock-"+pre); setMsg(p==="journal"?"The lock doesn't give.":"The wheels click, but the door stays shut.", "bad"); }
+}
+function dial(d){
+  if(lineBusy) return;
+  dialBuf += d;
+  const out = $("#dialled"); if(out) out.textContent = dialBuf;
+  const line = $("#line");
+  if(dialBuf==="0"){
+    lineBusy = true;
+    if(line) line.innerHTML = `<div class="transcript"><div class="who">Operator</div><p>“Number, please? … Call records? Not at this hour, dear. You'll want the night supervisor. Dial her direct.” <i>Click.</i></p></div>`;
+    setTimeout(()=>{ dialBuf=""; lineBusy=false; const o=$("#dialled"); if(o) o.innerHTML="&nbsp;"; }, 900);
+    return;
+  }
+  if(dialBuf.length===4){
+    lineBusy = true;
+    if(dialBuf==="6677"){ setTimeout(()=>{ dialBuf=""; lineBusy=false; solve("phone"); const l=$("#line"); if(l) l.scrollIntoView({behavior:"smooth",block:"nearest"}); }, 500); }
+    else {
+      wrongSound();
+      if(line) line.innerHTML = `<div class="transcript"><div class="who">The line</div><p>A dry click, then a tinny voice: “There is no such number on the Ashby exchange.”</p></div>`;
+      setTimeout(()=>{ dialBuf=""; lineBusy=false; const o=$("#dialled"); if(o) o.innerHTML="&nbsp;"; }, 900);
+    }
+  }
+}
+function pull(fig){
+  if(S.solved.cuckoo || cuckooSeq.length>=3) return;
+  cuckooSeq.push(fig);
+  const q = $("#seq"); if(q) q.textContent = cuckooSeq.map(f=>FIG[f]).join(" → ");
+  tone(520 + cuckooSeq.length*90, .12, "triangle", .05);
+  if(cuckooSeq.length===3){
+    if(cuckooSeq.join()==="baker,woodcutter,lamplighter"){
+      setMsg("The weights drop, the gears whir, and the little door bangs open…", "good");
+      setTimeout(()=>{ cuckooSeq=[]; solve("cuckoo"); }, 900);
+    } else {
+      wrongSound(); setMsg("The chains slide back up. Nothing happens.", "bad");
+      setTimeout(()=>{ cuckooSeq=[]; const s=$("#seq"); if(s) s.textContent="No chains pulled yet."; }, 1100);
+    }
+  }
+}
+function setGF(){
+  if(gfVals.h===4 && gfVals.m===15) solve("grandfather");
+  else { wrongSound(); shake("#gfdial"); setMsg("She ticks on. Nothing happens.", "bad"); }
+}
+function accuse(){
+  const f = $("#accuse"); const m = $("#amsg");
+  const who = f.elements.who.value, how = f.elements.how.value, why = f.elements.why.value;
+  if(!who || !how || !why){ m.textContent = "Choose an answer for all three questions."; return; }
+  if(who==="clara" && how==="cyanide" && why==="patent"){ win(); return; }
+  if(S.wrongs.length<30) S.wrongs.push(rid());
+  commit(); wrongSound(); updateTimerDOM();
+  const lines = ["Constable Pike frowns. “That doesn't fit the evidence. Look again.”","Someone in the room breathes out. Constable Pike shakes his head. “No. Not like that.”","“I can't arrest anyone on that,” says Constable Pike."];
+  m.textContent = lines[(S.wrongs.length-1)%lines.length] + (S.untimed?"":" (−3:00)");
+}
+function win(){
+  S.wn = {at:Date.now(), r:S.untimed ? null : remaining(), u:myId};
+  commit(); render(); window.scrollTo(0,0); unlockSound();
+}
+function setWall(i){ S.wall = (i+4)%4; save(); renderStage(); publish(); }
+function readName(){ const i = $("#pname"); if(i){ me.name = cleanName(i.value); savePlayer(); } }
+function newGame(){
+  readName();
+  const snd = S.sound; S = defaultState(); S.sound = snd; resetLocals();
+  S.game = newCode(); S.gid = rid(); S.t0 = Date.now(); S.lastSeen = Date.now();
+  subscribeGame(S.game); clearHash();
+  commit(); render(); window.scrollTo(0,0);
+  openTeam();
+}
+function lobbyMsg(t, c){ const m = $("#lmsg"); if(m){ m.textContent = t; m.className = "msg " + (c||""); } }
+function joinGame(){
+  readName();
+  const inp = $("#jcode");
+  const code = (inp ? inp.value : "").toUpperCase().replace(/[^A-Z]/g, "");
+  if(code.length!==4){ lobbyMsg("Game codes are 4 letters.", "bad"); return; }
+  if(!relayOnline()){ lobbyMsg("Can't reach the game servers right now. Check your internet connection and try again.", "bad"); return; }
+  if(pendingJoin) return;
+  pendingJoin = {code, found:{}};
+  subscribeGame(code);
+  lobbyMsg(`Looking for game ${code}…`);
+  setTimeout(finishJoin, 2500);
+}
+function finishJoin(){
+  const pj = pendingJoin; pendingJoin = null; if(!pj) return;
+  const msgs = Object.values(pj.found).filter(m=>typeof m.gid==="string" && m.gid);
+  if(!msgs.length){ subscribeGame(null); lobbyMsg(`No game found with code ${pj.code}. Check the code with whoever started it.`, "bad"); return; }
+  msgs.sort((a,b)=>(isNum(b.ts)?b.ts:0)-(isNum(a.ts)?a.ts:0));
+  const gid = msgs[0].gid.slice(0,16);
+  const snd = S.sound; S = defaultState(); S.sound = snd; resetLocals();
+  S.game = pj.code; S.gid = gid;
+  for(const m of msgs) if(m.gid===gid) merge(m.s, m.pid);
+  if(!S.t0) S.t0 = Date.now();
+  S.lastSeen = Date.now(); clearHash();
+  commit(); render(); window.scrollTo(0,0);
+  toast(`You joined game ${pj.code}.`);
+}
+function leaveGame(){
+  if(S.game && relayOnline()) publishNow({left:1});
+  subscribeGame(null);
+  const snd = S.sound; S = defaultState(); S.sound = snd; resetLocals();
+  commit(); render(); window.scrollTo(0,0);
+}
+function act(a, el){
+  switch(a){
+    case "new": newGame(); break;
+    case "join": joinGame(); break;
+    case "share": try{ navigator.share({title:"The Clockmaker's Last Hour", text:`Join my murder mystery escape room. Game code: ${S.game}`, url:inviteLink()}).catch(()=>{}); }catch(e){} break;
+    case "copy": { const ok=()=>{ const m=$("#cmsg"); if(m){ m.textContent="Invite link copied."; m.className="msg good"; } }; const no=()=>{ const i=$("#invlink"); if(i){ i.focus(); i.select(); } const m=$("#cmsg"); if(m){ m.textContent="Select the link above and copy it."; m.className="msg"; } }; try{ navigator.clipboard.writeText(inviteLink()).then(ok, no); }catch(e){ no(); } break; }
+    case "prev": setWall(S.wall-1); break;
+    case "next": setWall(S.wall+1); break;
+    case "wall": setWall(+el.dataset.w); break;
+    case "tab": S.nbTab = el.dataset.tab; save(); renderNotes(); break;
+    case "notes": { const n=$("#notes"); if(n) n.scrollIntoView({behavior:"smooth", block:"start"}); break; }
+    case "team": openTeam(); break;
+    case "hint": openHints(); break;
+    case "reveal": { const id = el.dataset.g; const g = GOALS.find(x=>x.id===id); if(!g) break; const n = S.hints[id]||0; if(n>=g.hints.length) break; S.hints[id] = n+1; commit(); updateTimerDOM(); openHints(); break; }
+    case "pause": pauseClock(); break;
+    case "resume": resumeClock(); break;
+    case "menu": openMenu(false); break;
+    case "howto": openHowTo(); break;
+    case "sound": S.sound = !S.sound; if(S.sound) ensureAudio(); save(); openMenu(false); break;
+    case "leave-ask": openMenu(true); break;
+    case "leave-no": openMenu(false); break;
+    case "leave": leaveGame(); break;
+    case "close": closeSheet(); break;
+    case "try": tryLock(el.dataset.p); break;
+    case "use": if(el.dataset.p==="register" && S.items.registerKey) solve("register"); if(el.dataset.p==="door" && S.items.doorKey) solve("door"); break;
+    case "dial": dial(el.dataset.d); break;
+    case "hangup": dialBuf=""; lineBusy=false; { const o=$("#dialled"); if(o) o.innerHTML="&nbsp;"; const l=$("#line"); if(l) l.innerHTML = S.solved.phone?mossTranscript():""; } break;
+    case "pull": pull(el.dataset.fig); break;
+    case "set-gf": setGF(); break;
+    case "parlour": hideSheet(); S.phase="accuse"; save(); renderStage(); publish(); window.scrollTo(0,0); break;
+    case "back-room": S.phase="play"; save(); renderStage(); publish(); break;
+    case "untimed": S.untimed = true; commit(); render(); break;
+    case "reveal-solution": S.showSolution = true; save(); render(); break;
+  }
+}
+
+/* ---------------- Events ---------------- */
+document.addEventListener("click", e=>{
+  const ov = $("#ov");
+  if(e.target===ov){ closeSheet(); return; }
+  const h = e.target.closest("[data-hot]");
+  if(h){ openView(h.dataset.hot); return; }
+  const a = e.target.closest("[data-act]");
+  if(a) act(a.dataset.act, a);
+});
+document.addEventListener("keydown", e=>{
+  if((e.key==="Enter" || e.key===" ") && e.target.matches && e.target.matches("g[data-hot]")){ e.preventDefault(); openView(e.target.dataset.hot); return; }
+  if(e.key==="Escape" && !$("#ov").hidden){ closeSheet(); return; }
+  if(e.key==="Enter" && e.target.id==="jcode"){ e.preventDefault(); joinGame(); return; }
+  if(e.key==="Enter" && e.target.id==="pname"){ e.preventDefault(); const j=$("#jcode"); if(j && j.value) joinGame(); return; }
+  if($("#ov").hidden && screen()==="play" && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){
+    if(e.key==="ArrowLeft") setWall(S.wall-1);
+    if(e.key==="ArrowRight") setWall(S.wall+1);
+  }
+});
+document.addEventListener("change", e=>{
+  const t = e.target;
+  if(t.matches(".wheel[data-pre]")){ lockVals[t.dataset.pre][+t.dataset.i] = t.value; tone(900,.03,"square",.03); }
+  if(t.id==="gh" || t.id==="gm"){ gfVals[t.id==="gh"?"h":"m"] = +t.value; const d=$("#gfdial"); if(d) d.innerHTML = gfDial(); }
+  if(t.name==="who" || t.name==="how" || t.name==="why"){ accVals[t.name] = t.value; }
+});
+document.addEventListener("input", e=>{
+  const t = e.target;
+  if(t.id==="pname"){ me.name = cleanName(t.value); savePlayer(); }
+  if(t.id==="jcode"){ const v = t.value.toUpperCase().replace(/[^A-Z]/g,""); if(v!==t.value) t.value = v; }
+});
+document.addEventListener("submit", e=>{ if(e.target.id==="accuse"){ e.preventDefault(); accuse(); } });
+document.addEventListener("pointerdown", ()=>{ if(S.sound) ensureAudio(); }, {passive:true});
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden){ if(S.game && !paused()) S.lastSeen = Date.now(); save(); } });
+
+/* ---------------- Boot ---------------- */
+let booted = false;
+function start(){
+  if(booted) return; booted = true;
+  const l = load();
+  if(l){
+    S = l;
+    if(S.game && !S.gid) S = Object.assign(defaultState(), {sound:S.sound});
+    // Coming back after a long gap: hold the clock where it was until we know whether teammates kept playing.
+    if(S.game && S.t0 && !S.wn && !S.untimed && !(S.pz.at>0) && S.lastSeen && Date.now() - S.lastSeen > 15000 && remOf(S, S.lastSeen) > 0){
+      savedPz = Object.assign({}, S.pz);
+      S.pz = {v:S.pz.v, at:S.lastSeen, acc:S.pz.acc, u:null};
+      tentative = true; welcome = true;
+    }
+  }
+  render();
+  setInterval(tick, 250);
+  connectNet();
+}
+start();
+})();
+</script>
+</body>
+</html>
